@@ -23,6 +23,7 @@ export async function GET(request: Request) {
     }
 
     // Remove sensitive information
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...safeResident } = resident;
 
     return NextResponse.json(safeResident);
