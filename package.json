@@ -1,37 +1,33 @@
 {
-  "name": "bvrsrs-v1",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "name": "werequest",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.4",
-    "axios": "^1.8.4",
-    "bcryptjs": "^3.0.2",
-    "body-parser": "^1.20.3",
-    "connect-mongo": "^5.1.0",
-    "dotenv": "^16.4.7",
-    "ejs": "^3.1.10",
-    "ejs-mate": "^4.0.0",
-    "exceljs": "^4.4.0",
-    "express": "^4.21.2",
-    "express-fileupload": "^1.5.1",
-    "express-session": "^1.18.1",
-    "moment": "^2.30.1",
-    "mongoose": "^8.12.1",
-    "multer": "^1.4.5-lts.1",
-    "pdfkit": "^0.16.0"
+    "@types/bcrypt": "^5.0.2",
+    "@types/nodemailer": "^6.4.17",
+    "bcrypt": "^6.0.0",
+    "mongodb": "^6.16.0",
+    "next": "15.3.2",
+    "next-auth": "^4.24.11",
+    "nodemailer": "^6.10.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
-    "nodemon": "^3.1.9",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^4.0.15"
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
