@@ -1,7 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import mongodb from "./mongodb";
-import { JWT } from "next-auth/jwt";
 import { compare } from "bcrypt";
 
 // Extend the built-in session types
@@ -58,6 +57,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Use bcrypt to compare passwords
+          
           const isPasswordValid = await compare(credentials.password, user.password);
           
           if (!isPasswordValid) {

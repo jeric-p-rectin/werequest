@@ -31,7 +31,7 @@ export default function Home() {
       } else {
         router.push("/loading");
       }
-    } catch (error: unknown) {
+    } catch {
       setError("An error occurred. Please try again.");
       setIsLoading(false);
     }
