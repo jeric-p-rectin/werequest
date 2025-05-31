@@ -9,6 +9,13 @@ export async function POST(request: Request) {
     // Hash the password
     const hashedPassword = await hash(data.password, 10);
 
+    // Create full name by combining name components
+    const fullName = [
+      data.firstName,
+      data.middleName,
+      data.lastName
+    ].filter(Boolean).join(' ');
+
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("WeRequestDB");
@@ -20,10 +27,12 @@ export async function POST(request: Request) {
       middleName: data.middleName,
       lastName: data.lastName,
       extName: data.extName,
+      fullName: fullName,
 
       // Birth Information
       birthday: new Date(data.birthday),
       birthPlace: data.birthPlace,
+      age: data.age, // Add age field
 
       // Personal Details
       gender: data.gender,
