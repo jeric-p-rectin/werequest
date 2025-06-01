@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import SideNavigation from '../SideNavigation';
 import ViewDocuments from './ViewDocuments';
+import ViewRequestedDocuments from './ViewRequestedDocuments';
 import RequestDocument from './RequestDocument';
 
 export default function MainRequest() {
+  const { data: session } = useSession();
   const [activeView, setActiveView] = useState<'list' | 'request'>('list');
+  const isResident = session?.user?.role === 'resident';
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -27,7 +31,7 @@ export default function MainRequest() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  View Documents
+                  {isResident ? 'My Requests' : 'View Documents'}
                 </button>
                 <button
                   onClick={() => setActiveView('request')}
@@ -47,7 +51,7 @@ export default function MainRequest() {
         {/* Main content area */}
         <div className="flex-1 overflow-auto">
           {activeView === 'list' ? (
-            <ViewDocuments />
+            isResident ? <ViewRequestedDocuments /> : <ViewDocuments />
           ) : (
             <div className="flex justify-center pt-6">
               <RequestDocument />

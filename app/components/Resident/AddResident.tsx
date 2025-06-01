@@ -40,11 +40,22 @@ export default function AddResident() {
     if (formData.birthday) {
       const birthDate = new Date(formData.birthday);
       const today = new Date();
+      
+      // Calculate age precisely
       let calculatedAge = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
       
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      // Adjust age if birthday hasn't occurred this year
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
         calculatedAge--;
+      }
+
+      // Set error if user is under 13
+      if (calculatedAge < 13) {
+        setError("Resident must be at least 13 years old to register");
+      } else {
+        setError("");
       }
       
       setAge(calculatedAge);
@@ -63,11 +74,18 @@ export default function AddResident() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate age before submission
+    if (formData.age !== null && formData.age < 13) {
+      setError("Resident must be at least 13 years old to register");
+      return;
+    }
+    
     setError("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/add-resident", {
+      const response = await fetch("/api/resident/add-resident", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -190,8 +208,12 @@ export default function AddResident() {
                 value={formData.birthday}
                 onChange={handleChange}
                 required
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
               />
+              {age !== null && age < 13 && (
+                <p className="text-red-500 text-sm mt-1">Must be at least 13 years old to register</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-1">Age</label>

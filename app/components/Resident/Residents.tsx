@@ -5,6 +5,7 @@ import { FaEye, FaSearch } from 'react-icons/fa';
 
 interface ResidentData {
   _id: string;
+  username: string;
   firstName: string;
   middleName: string;
   lastName: string;
@@ -44,7 +45,7 @@ const Residents = () => {
 
   const fetchResidents = async () => {
     try {
-      const response = await fetch('/api/get-all-residents');
+      const response = await fetch('/api/resident/get-all-residents');
       if (!response.ok) throw new Error('Failed to fetch residents');
       const data = await response.json();
       setResidents(data.data);
@@ -175,6 +176,10 @@ const Residents = () => {
                 <div className="space-y-4">
                   <h3 className="font-medium text-lg text-gray-800">Personal Information</h3>
                   <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Username</p>
+                      <p className="text-gray-800">{selectedResident.username}</p>
+                    </div>
                     <div>
                       <p className="text-sm text-gray-500">Full Name</p>
                       <p className="text-gray-800">{`${selectedResident.firstName} ${selectedResident.middleName} ${selectedResident.lastName} ${selectedResident.extName}`}</p>

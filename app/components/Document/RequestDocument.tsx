@@ -44,7 +44,7 @@ export default function RequestDocument() {
     setError('');
 
     try {
-      const response = await fetch('/api/request-document', {
+      const response = await fetch('/api/document/request-document', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

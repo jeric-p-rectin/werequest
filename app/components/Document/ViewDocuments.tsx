@@ -11,8 +11,6 @@ export default function ViewDocuments() {
   const [selectedDocument, setSelectedDocument] = useState<RequestedDocument | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
-  const [verifyRemarks, setVerifyRemarks] = useState('');
-  const [documentNumber, setDocumentNumber] = useState('');
 
   // Helper function to get requestor's name
   const getRequestorName = (doc: RequestedDocument) => {
@@ -29,7 +27,7 @@ export default function ViewDocuments() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch('/api/get-all-documents');
+      const response = await fetch('/api/document/get-all-documents');
       if (!response.ok) throw new Error('Failed to fetch documents');
       const data = await response.json();
       setDocuments(data.data);
@@ -45,15 +43,13 @@ export default function ViewDocuments() {
     setShowModal(true);
     // Reset form states
     setDeclineReason('');
-    setVerifyRemarks('');
-    setDocumentNumber('');
   };
 
   const handleDecline = async () => {
     if (!selectedDocument || !declineReason) return;
 
     try {
-      const response = await fetch(`/api/documents/${selectedDocument._id}/decline`, {
+      const response = await fetch(`/api/document/document-options/${selectedDocument._id}/decline`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,12 +70,12 @@ export default function ViewDocuments() {
     if (!selectedDocument) return;
 
     try {
-      const response = await fetch(`/api/documents/${selectedDocument._id}/verify`, {
+      const response = await fetch(`/api/document/document-options/${selectedDocument._id}/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ remarks: verifyRemarks }),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) throw new Error('Failed to verify document');
@@ -92,15 +88,15 @@ export default function ViewDocuments() {
   };
 
   const handleApprove = async () => {
-    if (!selectedDocument || !documentNumber) return;
+    if (!selectedDocument) return;
 
     try {
-      const response = await fetch(`/api/documents/${selectedDocument._id}/approve`, {
+      const response = await fetch(`/api/document/document-options/${selectedDocument._id}/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ documentNumber }),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) throw new Error('Failed to approve document');
@@ -116,7 +112,7 @@ export default function ViewDocuments() {
     if (!selectedDocument) return;
 
     try {
-      const response = await fetch(`/api/documents/${selectedDocument._id}/restore`, {
+      const response = await fetch(`/api/document/document-options/${selectedDocument._id}/restore`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -248,8 +244,6 @@ export default function ViewDocuments() {
                       <div>
                         <p className="text-sm font-medium text-gray-700 mb-1">Verified By</p>
                         <p className="text-gray-900">{selectedDocument.verify.verifiedBy}</p>
-                        <p className="text-sm font-medium text-gray-700 mt-2 mb-1">Verification Remarks</p>
-                        <p className="text-gray-900">{selectedDocument.verify.remarks || 'No remarks'}</p>
                       </div>
                     )}
                     
@@ -266,8 +260,6 @@ export default function ViewDocuments() {
                       <div>
                         <p className="text-sm font-medium text-gray-700 mb-1">Approved By</p>
                         <p className="text-gray-900">{selectedDocument.approved.approvedBy}</p>
-                        <p className="text-sm font-medium text-gray-700 mt-2 mb-1">Document Number</p>
-                        <p className="text-gray-900">{selectedDocument.approved.documentNumber}</p>
                       </div>
                     )}
                   </div>
@@ -286,34 +278,6 @@ export default function ViewDocuments() {
                           onChange={(e) => setDeclineReason(e.target.value)}
                           className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
                           rows={2}
-                        />
-                      </div>
-                    )}
-
-                    {!selectedDocument.verify.status && !selectedDocument.decline.status && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Verification Remarks
-                        </label>
-                        <textarea
-                          value={verifyRemarks}
-                          onChange={(e) => setVerifyRemarks(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
-                          rows={2}
-                        />
-                      </div>
-                    )}
-
-                    {!selectedDocument.approved.status && !selectedDocument.decline.status && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Document Number
-                        </label>
-                        <input
-                          type="text"
-                          value={documentNumber}
-                          onChange={(e) => setDocumentNumber(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
                         />
                       </div>
                     )}
@@ -342,8 +306,7 @@ export default function ViewDocuments() {
                   {!selectedDocument.verify.status && !selectedDocument.decline.status && (
                     <button
                       onClick={handleVerify}
-                      disabled={!verifyRemarks}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     >
                       Verify
                     </button>
@@ -351,8 +314,7 @@ export default function ViewDocuments() {
                   {!selectedDocument.approved.status && !selectedDocument.decline.status && (
                     <button
                       onClick={handleApprove}
-                      disabled={!documentNumber}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                     >
                       Approve
                     </button>

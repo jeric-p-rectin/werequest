@@ -22,6 +22,13 @@ export async function POST(request: Request) {
     
     // Create new resident in database
     const result = await db.collection("users").insertOne({
+      // Generate username
+      username: `${data.firstName.slice(0, 3).toUpperCase()}${
+        data.middleName ? data.middleName.slice(0, 2).toUpperCase() : 'XX'
+      }${data.lastName.slice(0, 3).toUpperCase()}${
+        new Date(data.birthday).getDate().toString().padStart(2, '0')
+      }${new Date(data.birthday).getFullYear().toString().slice(-2)}`,
+
       // Personal Information
       firstName: data.firstName,
       middleName: data.middleName,

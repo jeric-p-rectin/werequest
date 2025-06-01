@@ -1,42 +1,82 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import { BiSolidDashboard } from "react-icons/bi";
 import { HiDocumentText } from "react-icons/hi";
-import { FaUsers, FaBuilding, FaExclamationTriangle } from "react-icons/fa";
-import { FaBullhorn } from "react-icons/fa"; // Using FaBullhorn instead of FaMegaphone
+import { FaUsers, FaBuilding, FaExclamationTriangle, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaBullhorn } from "react-icons/fa";
 
 const SideNavigation = () => {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
-  const menuItems = [
-    { href: '/dashboard', icon: <BiSolidDashboard className="w-5 h-5" />, label: 'Dashboard' },
-    { href: '/document', icon: <HiDocumentText className="w-5 h-5" />, label: 'Document' },
-    { href: '/resident', icon: <FaUsers className="w-5 h-5" />, label: 'Resident' },
-    { href: '/business', icon: <FaBuilding className="w-5 h-5" />, label: 'Business' },
-    { href: '/blotter', icon: <FaExclamationTriangle className="w-5 h-5" />, label: 'Blotter' },
-    { href: '/announcement', icon: <FaBullhorn className="w-5 h-5" />, label: 'Announcement' },
+  // Define all possible menu items
+  const allMenuItems = [
+    { 
+      href: '/dashboard', 
+      icon: <BiSolidDashboard className="w-5 h-5" />, 
+      label: 'Dashboard', 
+      roles: ['super admin', 'admin'] 
+    },
+    { 
+      href: '/document', 
+      icon: <HiDocumentText className="w-5 h-5" />, 
+      label: 'Document', 
+      roles: ['super admin', 'admin', 'resident'] 
+    },
+    { 
+      href: '/resident', 
+      icon: <FaUsers className="w-5 h-5" />, 
+      label: 'Resident', 
+      roles: ['super admin', 'admin'] 
+    },
+    { 
+      href: '/business', 
+      icon: <FaBuilding className="w-5 h-5" />, 
+      label: 'Business', 
+      roles: ['super admin', 'admin'] 
+    },
+    { 
+      href: '/blotter', 
+      icon: <FaExclamationTriangle className="w-5 h-5" />, 
+      label: 'Blotter', 
+      roles: ['super admin', 'admin'] 
+    },
+    { 
+      href: '/announcement', 
+      icon: <FaBullhorn className="w-5 h-5" />, 
+      label: 'Announcement', 
+      roles: ['super admin', 'admin', 'resident'] 
+    },
   ];
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item => 
+    item.roles.includes(session?.user?.role || '')
+  );
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
 
   return (
     <div className="flex flex-col h-screen shadow-sm" style={{ background: "radial-gradient(#4d5f30, #34450e)" }}>
       {/* User Profile Section */}
       <div className="p-4 flex items-center gap-4 border-b border-white/20">
-        <Link href="/profileA" className="block">
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-white/40">
-            <Image
-              src="/images/kaila.jpg"
-              alt="Profile"
-              width={40}
-              height={40}
-              className="object-cover"
-            />
+        <Link href="/profile" className="block">
+          <div className="w-10 h-10 rounded-full overflow-hidden border border-white/40 flex items-center justify-center bg-white/10">
+            <FaUserCircle className="w-8 h-8 text-white/80" />
           </div>
         </Link>
         <div>
-          <p className="text-sm font-medium text-white">Hello Wilyn</p>
+          <p className="text-sm font-medium text-white">
+            Hello, {session?.user?.fullName?.split(' ')[0] || 'User'}
+          </p>
+          <p className="text-xs text-white/60 capitalize">
+            {session?.user?.role || ''}
+          </p>
         </div>
       </div>
 
@@ -64,15 +104,25 @@ const SideNavigation = () => {
         </nav>
       </div>
 
+      {/* Sign Out Button */}
+      <div className="p-4 border-t border-white/20">
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/80 hover:bg-white/10 transition-colors"
+        >
+          <FaSignOutAlt className="w-5 h-5" />
+          <span>Sign Out</span>
+        </button>
+      </div>
+
       {/* Footer Logo Section */}
       <div className="p-4 border-t border-white/20">
         <div className="flex items-center gap-3 p-3 border border-white/20 rounded-lg justify-center">
           <div className="w-8 h-8 relative">
-            <Image
+            <img
               src="/images/logo.png"
               alt="Logo"
-              fill
-              className="object-contain"
+              className="object-contain w-full h-full"
             />
           </div>
           <p className="text-xs font-medium text-white">San Andres, Guimba</p>

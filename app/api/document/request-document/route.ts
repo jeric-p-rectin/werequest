@@ -118,13 +118,11 @@ export async function POST(request: Request) {
         status: false,
         verifiedBy: null,
         verifiedAt: null,
-        remarks: null
       },
       approved: {
         status: false,
         approvedBy: null,
         approvedAt: null,
-        documentNumber: null
       },
       createdAt: date,
       updatedAt: date

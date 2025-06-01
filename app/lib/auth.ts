@@ -9,6 +9,7 @@ declare module "next-auth" {
     id: string;
     email: string;
     role: string;
+    fullName: string;
   }
   
   interface Session {
@@ -16,6 +17,7 @@ declare module "next-auth" {
       id: string;
       email: string;
       role: string;
+      fullName: string;
     }
   }
 }
@@ -26,6 +28,7 @@ declare module "next-auth/jwt" {
     id: string;
     email: string;
     role: string;
+    fullName: string;
   }
 }
 
@@ -35,43 +38,36 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text" },
+        username: { label: "Username or Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
-          return null;
-        }
-
         try {
           const client = await mongodb;
           const db = client.db("WeRequestDB");
-          const user = await db.collection("users").findOne({ 
+          
+          // Check for user by either email or username
+          const user = await db.collection("users").findOne({
             $or: [
-              { username: credentials.username },
-              { email: credentials.username }
+              { email: credentials?.username },
+              { username: credentials?.username }
             ]
           });
 
-          if (!user) {
-            return null;
-          }
+          if (!user) return null;
 
-          // Use bcrypt to compare passwords
-          
-          const isPasswordValid = await compare(credentials.password, user.password);
-          
-          if (!isPasswordValid) {
-            return null;
-          }
+          const passwordsMatch = await compare(credentials?.password || '', user.password);
+
+          if (!passwordsMatch) return null;
 
           return {
             id: user._id.toString(),
             email: user.email,
             role: user.role,
+            fullName: user.fullName
           };
         } catch (error) {
-          console.error("Authentication error:", error);
+          console.error('Error:', error);
           return null;
         }
       }
@@ -91,6 +87,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.role = user.role;
+        token.fullName = user.fullName;
       }
       return token;
     },
@@ -99,6 +96,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.role = token.role;
+        session.user.fullName = token.fullName;
       }
       return session;
     },
