@@ -5,9 +5,10 @@ import { NextRequest } from 'next/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const updateData = await request.json();
     const client = await clientPromise;
     const db = client.db("WeRequestDB");
@@ -22,7 +23,7 @@ export async function PUT(
     );
 
     const result = await db.collection('blotters').updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: cleanUpdateData }
     );
 
