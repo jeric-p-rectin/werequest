@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/app/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+type Props = {
+  params: {
+    id: string
+  }
+}
+
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  props: Props
 ) {
   try {
     const { status } = await request.json();
@@ -12,7 +18,7 @@ export async function PUT(
     const db = client.db("WeRequestDB");
 
     const result = await db.collection('blotters').updateOne(
-      { _id: new ObjectId(context.params.id) },
+      { _id: new ObjectId(props.params.id) },
       { $set: { status } }
     );
 
