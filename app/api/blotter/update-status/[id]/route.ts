@@ -5,15 +5,16 @@ import { NextRequest } from 'next/server';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { status } = await req.json();
     const client = await clientPromise;
     const db = client.db("WeRequestDB");
 
     const result = await db.collection('blotters').updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: { status } }
     );
 
