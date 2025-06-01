@@ -18,7 +18,7 @@ export default function ViewDocuments() {
       return doc.requestorInformation.fullName;
     }
     // Fallback for old document format
-    return (doc as any).name || 'N/A';
+    return (doc as { name?: string }).name || 'N/A';
   };
 
   useEffect(() => {

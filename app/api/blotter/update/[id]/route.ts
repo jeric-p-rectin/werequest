@@ -12,7 +12,8 @@ export async function PUT(
     const db = client.db("WeRequestDB");
 
     // Remove _id from updateData to avoid modifying immutable field
-    const { _id, ...cleanUpdateData } = updateData;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id: _, ...cleanUpdateData } = updateData;
 
     // Remove any undefined or null values from the update
     Object.keys(cleanUpdateData).forEach(key => 

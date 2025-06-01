@@ -5,6 +5,13 @@ import { authOptions } from '@/app/lib/auth';
 import { ObjectId } from 'mongodb';
 import { hash } from 'bcrypt';
 
+interface UpdateFields {
+  username: string;
+  email: string;
+  password?: string;
+  updatedAt: Date;
+}
+
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +26,7 @@ export async function PUT(request: Request) {
     const data = await request.json();
     
     // Build update fields object
-    const updateFields: any = {
+    const updateFields: UpdateFields = {
       username: data.username,
       email: data.email,
       updatedAt: new Date()

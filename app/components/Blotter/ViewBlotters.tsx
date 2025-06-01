@@ -109,7 +109,8 @@ export default function ViewBlotters() {
 
     try {
       // Remove _id from editForm
-      const { _id, ...updateData } = editForm;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { _id: _, ...updateData } = editForm;
 
       const response = await fetch(`/api/blotter/update/${selectedBlotter._id}`, {
         method: 'PUT',

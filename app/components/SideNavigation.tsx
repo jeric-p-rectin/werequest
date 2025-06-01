@@ -7,6 +7,7 @@ import { BiSolidDashboard } from "react-icons/bi";
 import { HiDocumentText } from "react-icons/hi";
 import { FaUsers, FaBuilding, FaExclamationTriangle, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 import { FaBullhorn } from "react-icons/fa";
+import Image from 'next/image';
 
 const SideNavigation = () => {
   const pathname = usePathname();
@@ -118,14 +119,16 @@ const SideNavigation = () => {
       {/* Footer Logo Section */}
       <div className="p-4 border-t border-white/20">
         <div className="flex items-center gap-3 p-3 border border-white/20 rounded-lg justify-center">
-          <div className="w-8 h-8 relative">
-            <img
-              src="/images/logo.png"
+          <div className="flex items-center">
+            <Image
+              src="/logo.png"
               alt="Logo"
-              className="object-contain w-full h-full"
+              width={40}
+              height={40}
+              className="h-10 w-auto"
             />
+            <span className="ml-3 text-xl font-semibold text-gray-800">WeRequest</span>
           </div>
-          <p className="text-xs font-medium text-white">San Andres, Guimba</p>
         </div>
       </div>
     </div>

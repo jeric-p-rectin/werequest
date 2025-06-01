@@ -14,7 +14,8 @@ export async function GET() {
 
     // Remove sensitive information
     const sanitizedResidents = residents.map(resident => {
-      const { password, ...userWithoutPassword } = resident;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...userWithoutPassword } = resident;
       return userWithoutPassword;
     });
 

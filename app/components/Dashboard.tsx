@@ -15,7 +15,7 @@ const Example = () => {
         <div className="p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-gray-800">Welcome to Dashboard</h1>
-            <p className="text-gray-600 mt-2">Here's what's happening in your barangay today.</p>
+            <p className="text-gray-600 mt-2">Here&apos;s what&apos;s happening in your barangay today.</p>
           </div>
 
           {/* Sample Content - Stats Cards */}
