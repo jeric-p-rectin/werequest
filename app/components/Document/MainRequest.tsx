@@ -65,7 +65,7 @@ export default function MainRequest() {
           {activeTab === 'list' && (isResident ? <ViewRequestedDocuments /> : <ViewDocuments />)}
           {activeTab === 'request' && (
             <div className="flex justify-center pt-6">
-              <RequestDocument />
+              <RequestDocument onBack={() => setActiveTab('list')} />
             </div>
           )}
         </div>
