@@ -6,8 +6,10 @@ import { ObjectId } from 'mongodb';
 import { hash } from 'bcrypt';
 
 interface UpdateFields {
-  username: string;
   email: string;
+  phoneNumber?: string;
+  civilStatus?: string;
+  workingStatus?: string;
   password?: string;
   updatedAt: Date;
 }
@@ -25,37 +27,38 @@ export async function PUT(request: Request) {
 
     const data = await request.json();
     
-    // Build update fields object
+    // Determine allowed fields based on role
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'super admin';
     const updateFields: UpdateFields = {
-      username: data.username,
       email: data.email,
       updatedAt: new Date()
     };
-
-    // Only hash and update password if provided
-    if (data.password) {
-      updateFields.password = await hash(data.password, 10);
+    if (isAdmin) {
+      // Admins can update password
+      if (data.password) {
+        updateFields.password = await hash(data.password, 10);
+      }
+    } else {
+      // Residents can update phoneNumber, civilStatus, workingStatus
+      updateFields.phoneNumber = data.phoneNumber;
+      updateFields.civilStatus = data.civilStatus;
+      updateFields.workingStatus = data.workingStatus;
     }
 
     const client = await clientPromise;
     const db = client.db("WeRequestDB");
     
-    // Check if username or email is already taken
+    // Only check for duplicate email for all users
     const existingUser = await db.collection("users").findOne({
       _id: { $ne: new ObjectId(session.user.id) },
-      $or: [
-        { username: data.username },
-        { email: data.email }
-      ]
+      email: data.email
     });
 
     if (existingUser) {
       return NextResponse.json(
         { 
           success: false, 
-          error: existingUser.username === data.username 
-            ? 'Username is already taken' 
-            : 'Email is already in use'
+          error: 'Email is already in use'
         },
         { status: 400 }
       );

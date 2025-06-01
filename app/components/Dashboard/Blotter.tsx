@@ -311,8 +311,8 @@ export default function BlotterDashboard() {
             <p className="text-lg font-semibold text-black">Days with the Most Cases</p>
             {topDays.map((d, i) => <p key={i} className="text-base text-black">{i+1}. {d}</p>)}
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Per Category Section */}
       <div className="mx-6 my-8">
@@ -339,7 +339,7 @@ export default function BlotterDashboard() {
                 <Bar dataKey="lastYear" fill="#9caf68" name="Last Year" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            </div>
           <div className="w-full md:w-1/3 bg-white rounded-lg shadow-2xl p-6 overflow-x-auto">
             <table className="min-w-[250px] w-full border border-gray-300 bg-white rounded-lg shadow text-base">
               <thead>
@@ -409,8 +409,8 @@ export default function BlotterDashboard() {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
-        </div>
       </div>
+    </div>
     </>
   );
 }

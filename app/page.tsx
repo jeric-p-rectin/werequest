@@ -29,7 +29,7 @@ export default function Home() {
         setError("Invalid username or password");
         setIsLoading(false);
       } else {
-        router.push("/dashboard");
+        router.push("/loading");
       }
     } catch {
       setError("An error occurred. Please try again.");

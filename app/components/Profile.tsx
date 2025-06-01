@@ -29,11 +29,21 @@ interface ProfileData {
 }
 
 interface EditableFields {
-  username: string;
   email: string;
-  password: string;
-  confirmPassword: string;
+  phoneNumber: string;
+  civilStatus: string;
+  workingStatus: string;
+  password?: string;
+  confirmPassword?: string;
 }
+
+type ProfileUpdateBody = {
+  email: string;
+  phoneNumber: string;
+  civilStatus: string;
+  workingStatus: string;
+  password?: string;
+};
 
 const Profile = () => {
   const { data: session } = useSession();
@@ -42,8 +52,10 @@ const Profile = () => {
   const [error, setError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [editableData, setEditableData] = useState<EditableFields>({
-    username: '',
     email: '',
+    phoneNumber: '',
+    civilStatus: '',
+    workingStatus: '',
     password: '',
     confirmPassword: ''
   });
@@ -61,8 +73,10 @@ const Profile = () => {
       if (result.success) {
         setProfileData(result.data);
         setEditableData({
-          username: result.data.username || '',
           email: result.data.email || '',
+          phoneNumber: result.data.phoneNumber || '',
+          civilStatus: result.data.civilStatus || '',
+          workingStatus: result.data.workingStatus || '',
           password: '',
           confirmPassword: ''
         });
@@ -77,36 +91,41 @@ const Profile = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditableData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (editableData.password !== editableData.confirmPassword) {
+    if (!isAdminUser && (editableData.password || editableData.confirmPassword)) {
+      setError('Residents cannot change password.');
+      return;
+    }
+    if (isAdminUser && editableData.password !== editableData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
     try {
+      const body: ProfileUpdateBody = {
+        email: editableData.email,
+        phoneNumber: editableData.phoneNumber,
+        civilStatus: editableData.civilStatus,
+        workingStatus: editableData.workingStatus,
+      };
+      if (isAdminUser) {
+        body.password = editableData.password || undefined;
+      }
       const response = await fetch('/api/profile/edit-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: editableData.username,
-          email: editableData.email,
-          password: editableData.password || undefined // Only send if password was changed
-        }),
+        body: JSON.stringify(body),
       });
-
       const result = await response.json();
-
       if (result.success) {
-        setProfileData(prev => prev ? { ...prev, username: editableData.username, email: editableData.email } : null);
+        setProfileData(prev => prev ? { ...prev, ...body } : null);
         setEditableData(prev => ({ ...prev, password: '', confirmPassword: '' }));
         setIsEditing(false);
         setError(null);
@@ -158,30 +177,79 @@ const Profile = () => {
         {/* Editable Fields */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-6 max-w-2xl">
-            <div>
-              <label className="block text-sm font-medium text-gray-600">Username</label>
-              <input
-                type="text"
-                name="username"
-                value={editableData.username}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={editableData.email}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
-              />
-            </div>
-            {isEditing && (
+            {/* Only show editable fields for residents */}
+            {!isAdminUser && (
               <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editableData.email}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Phone Number</label>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    value={editableData.phoneNumber}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Civil Status</label>
+                  <select
+                    name="civilStatus"
+                    value={editableData.civilStatus}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
+                  >
+                    <option value="">Select</option>
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Widowed">Widowed</option>
+                    <option value="Separated">Separated</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Working Status</label>
+                  <select
+                    name="workingStatus"
+                    value={editableData.workingStatus}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
+                  >
+                    <option value="">Select</option>
+                    <option value="Employed">Employed</option>
+                    <option value="Unemployed">Unemployed</option>
+                    <option value="Student">Student</option>
+                    <option value="Retired">Retired</option>
+                  </select>
+                </div>
+              </>
+            )}
+            {/* Admin fields remain as before */}
+            {isAdminUser && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editableData.email}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-gray-900"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600">New Password</label>
                   <input
@@ -239,8 +307,10 @@ const Profile = () => {
                 type="button"
                 onClick={() => {
                   setEditableData({
-                    username: profileData?.username || '',
-                    email: profileData?.email || '',
+                    email: '',
+                    phoneNumber: '',
+                    civilStatus: '',
+                    workingStatus: '',
                     password: '',
                     confirmPassword: ''
                   });

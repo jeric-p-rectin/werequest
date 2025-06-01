@@ -2,13 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaTimes } from 'react-icons/fa';
 
 interface RequestForm {
   fullName: string;
   documentType: string;
   copies: number;
   purpose: string;
+}
+
+interface RequestDocumentProps {
+  onBack: () => void;
 }
 
 const initialFormState: RequestForm = {
@@ -18,7 +21,7 @@ const initialFormState: RequestForm = {
   purpose: ''
 };
 
-export default function RequestDocument() {
+export default function RequestDocument({ onBack }: RequestDocumentProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -86,13 +89,13 @@ export default function RequestDocument() {
 
   return (
     <form onSubmit={handleSubmit} className="h-auto w-[40%] p-10 bg-white rounded-lg shadow-lg flex flex-col justify-start items-start relative">
-      {/* Close Button */}
+      {/* Back Button */}
       <button 
         type="button"
-        onClick={() => router.back()}
+        onClick={onBack}
         className="absolute right-5 top-5 text-gray-700 hover:text-gray-900"
       >
-        <FaTimes className="w-5 h-5" />
+        ×
       </button>
 
       {/* Title */}
