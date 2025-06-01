@@ -6,9 +6,10 @@ import { authOptions } from '@/app/lib/auth';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -22,7 +23,7 @@ export async function POST(
 
     // Check if document is verified first
     const document = await db.collection('documents').findOne(
-      { _id: new ObjectId(params.id) }
+      { _id: new ObjectId(id) }
     );
 
     if (!document) {
@@ -40,7 +41,7 @@ export async function POST(
     }
 
     const result = await db.collection('documents').updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       {
         $set: {
           'approved.status': true,
