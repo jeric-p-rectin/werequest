@@ -6,9 +6,10 @@ import { authOptions } from '@/app/lib/auth';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -21,7 +22,7 @@ export async function POST(
     const db = client.db("WeRequestDB");
 
     const result = await db.collection('documents').updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       {
         $set: {
           'decline.status': false,

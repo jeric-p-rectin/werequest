@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth';
 
 export async function POST(
-  request: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -18,7 +18,7 @@ export async function POST(
       );
     }
 
-    const { reason } = await request.json();
+    const { reason } = await req.json();
     if (!reason) {
       return NextResponse.json(
         { success: false, error: 'Decline reason is required' },
