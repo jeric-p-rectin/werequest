@@ -1,7 +1,11 @@
-import Example from "../components/Dashboard";
+'use client';
 
-export default function ExamplePage() {
+import MainDashboard from "../components/Dashboard/MainDashboard";
+
+export default function DashboardPage() {
     return (
-        <Example />
-    )
+        <>
+            <MainDashboard />
+        </>
+    );
 }

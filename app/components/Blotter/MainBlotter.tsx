@@ -4,9 +4,10 @@ import { useState } from 'react';
 import SideNavigation from '../SideNavigation';
 import ViewBlotters from './ViewBlotters';
 import AddBlotter from './AddBlotter';
+import BlotterAnalytics from '../Dashboard/Blotter';
 
 export default function MainBlotter() {
-  const [activeView, setActiveView] = useState<'view' | 'add'>('view');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'view' | 'add'>('view');
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -19,9 +20,19 @@ export default function MainBlotter() {
             <h1 className="text-2xl font-bold text-gray-800">Blotter Management</h1>
             <div className="flex gap-4">
               <button
-                onClick={() => setActiveView('view')}
+                onClick={() => setActiveTab('analytics')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors
-                  ${activeView === 'view'
+                  ${activeTab === 'analytics'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+              >
+                Analytics
+              </button>
+              <button
+                onClick={() => setActiveTab('view')}
+                className={`px-4 py-2 rounded-md font-medium transition-colors
+                  ${activeTab === 'view'
                     ? 'bg-green-600 text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
@@ -29,9 +40,9 @@ export default function MainBlotter() {
                 View Blotters
               </button>
               <button
-                onClick={() => setActiveView('add')}
+                onClick={() => setActiveTab('add')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors
-                  ${activeView === 'add'
+                  ${activeTab === 'add'
                     ? 'bg-green-600 text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
@@ -43,7 +54,9 @@ export default function MainBlotter() {
 
           {/* Content Area */}
           <div className="bg-white rounded-lg shadow">
-            {activeView === 'view' ? <ViewBlotters /> : <AddBlotter />}
+            {activeTab === 'analytics' && <BlotterAnalytics />}
+            {activeTab === 'view' && <ViewBlotters />}
+            {activeTab === 'add' && <AddBlotter />}
           </div>
         </div>
       </div>

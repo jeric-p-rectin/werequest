@@ -6,10 +6,11 @@ import SideNavigation from '../SideNavigation';
 import ViewDocuments from './ViewDocuments';
 import ViewRequestedDocuments from './ViewRequestedDocuments';
 import RequestDocument from './RequestDocument';
+import IssuanceAnalytics from '../Dashboard/Issuance';
 
 export default function MainRequest() {
   const { data: session } = useSession();
-  const [activeView, setActiveView] = useState<'list' | 'request'>('list');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'list' | 'request'>('list');
   const isResident = session?.user?.role === 'resident';
 
   return (
@@ -24,9 +25,19 @@ export default function MainRequest() {
               <h1 className="text-2xl font-semibold text-gray-800">Document Management</h1>
               <div className="space-x-4">
                 <button
-                  onClick={() => setActiveView('list')}
+                  onClick={() => setActiveTab('analytics')}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    activeView === 'list'
+                    activeTab === 'analytics'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Analytics
+                </button>
+                <button
+                  onClick={() => setActiveTab('list')}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    activeTab === 'list'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
@@ -34,9 +45,9 @@ export default function MainRequest() {
                   {isResident ? 'My Requests' : 'View Documents'}
                 </button>
                 <button
-                  onClick={() => setActiveView('request')}
+                  onClick={() => setActiveTab('request')}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    activeView === 'request'
+                    activeTab === 'request'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
@@ -50,9 +61,9 @@ export default function MainRequest() {
 
         {/* Main content area */}
         <div className="flex-1 overflow-auto">
-          {activeView === 'list' ? (
-            isResident ? <ViewRequestedDocuments /> : <ViewDocuments />
-          ) : (
+          {activeTab === 'analytics' && <IssuanceAnalytics />}
+          {activeTab === 'list' && (isResident ? <ViewRequestedDocuments /> : <ViewDocuments />)}
+          {activeTab === 'request' && (
             <div className="flex justify-center pt-6">
               <RequestDocument />
             </div>

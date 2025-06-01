@@ -121,7 +121,7 @@ const SideNavigation = () => {
         <div className="flex items-center gap-3 p-3 border border-white/20 rounded-lg justify-center">
           <div className="flex items-center">
             <Image
-              src="/logo.png"
+              src="/images/logo.png"
               alt="Logo"
               width={40}
               height={40}
