@@ -61,7 +61,7 @@ export default function MainDashboard() {
           <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Overview</h1>
 
           {/* Navigation Tabs */}
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex gap-4 mb-8 items-center">
             <button
               className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 focus:outline-none ${activeTab === 'issuance' ? 'bg-green-600 text-white shadow-lg' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100'}`}
               onClick={() => setActiveTab('issuance')}
@@ -74,6 +74,14 @@ export default function MainDashboard() {
             >
               Blotter
             </button>
+            <div className="flex-1" />
+            <a
+              href="/report/issuance-summary"
+              className="px-6 py-2 rounded-lg font-semibold transition-colors duration-200 focus:outline-none bg-green-600 text-white shadow-lg hover:bg-green-700"
+              style={{ display: 'inline-flex', alignItems: 'center' }}
+            >
+              Export Data
+            </a>
           </div>
 
           {/* Show the selected dashboard */}

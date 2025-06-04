@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { FaUserCircle } from 'react-icons/fa';
 
 interface ProfileData {
@@ -167,8 +167,14 @@ const Profile = () => {
             <p className="text-gray-600 capitalize">{session?.user?.role}</p>
           </div>
           <button
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => signOut({ callbackUrl: '/' })}
             className="ml-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            Sign Out
+          </button>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="ml-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
           >
             {isEditing ? 'Cancel' : 'Edit Profile'}
           </button>

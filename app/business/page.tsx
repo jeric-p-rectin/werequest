@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import SideNavigation from '../components/SideNavigation';
 import { FaPlus, FaEdit, FaFile, FaFlag, FaArchive, FaTimes } from 'react-icons/fa';
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 const mockBusinesses = [
   {
@@ -34,20 +36,14 @@ const mockBusinesses = [
 ];
 
 export default function BusinessPage() {
- 
+  const { data: session, status } = useSession();
+
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [showEdit, setShowEdit] = useState<null | number>(null);
   const [showDelete, setShowDelete] = useState<null | number>(null);
-
-  const filteredBusinesses = mockBusinesses.filter(b =>
-    b.owner.toLowerCase().includes(search.toLowerCase()) ||
-    b.name.toLowerCase().includes(search.toLowerCase()) ||
-    b.address.toLowerCase().includes(search.toLowerCase()) ||
-    b.nature.toLowerCase().includes(search.toLowerCase())
-  );
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -60,6 +56,21 @@ export default function BusinessPage() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
+  if (!session || !['admin', 'super admin'].includes(session.user.role)) {
+    redirect('/');
+  }
+
+  const filteredBusinesses = mockBusinesses.filter(b =>
+    b.owner.toLowerCase().includes(search.toLowerCase()) ||
+    b.name.toLowerCase().includes(search.toLowerCase()) ||
+    b.address.toLowerCase().includes(search.toLowerCase()) ||
+    b.nature.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-100">

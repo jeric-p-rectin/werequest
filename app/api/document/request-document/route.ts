@@ -84,7 +84,7 @@ export async function POST(request: Request) {
 
         // Address
         houseNo: getRequestorInformation.houseNo,
-        purok: getRequestorInformation.purok,
+        purok: getRequestorInformation.purok, // purok1 until purok7 is possible value
 
         // Work and Status
         workingStatus: getRequestorInformation.workingStatus,

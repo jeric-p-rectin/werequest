@@ -1,8 +1,28 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer, LineChart, Line } from 'recharts';
+import * as ss from 'simple-statistics';
+import { FaInfoCircle, FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';
 // import { format } from 'date-fns';
+
+enum Purok {
+  Purok1 = 'purok1',
+  Purok2 = 'purok2',
+  Purok3 = 'purok3',
+  Purok4 = 'purok4',
+  Purok5 = 'purok5',
+  Purok6 = 'purok6',
+  Purok7 = 'purok7',
+}
+
+enum DocumentType {
+  BarangayClearance = 'Barangay Clearance',
+  CertificateOfIndigency = 'Certificate of Indigency',
+  CertificateOfResidency = 'Certificate of Residency',
+  BusinessPermit = 'Business Permit',
+  BarcCertificate = 'Barc Certificate',
+}
 
 interface RequestorInfo {
   username: string;
@@ -21,7 +41,7 @@ interface RequestorInfo {
   email: string;
   phoneNumber: string;
   houseNo: string;
-  purok: string;
+  purok: Purok;
   workingStatus: string;
   sourceOfIncome: string;
   votingStatus: string;
@@ -36,7 +56,7 @@ interface RequestorInfo {
 interface DocumentData {
   _id: string;
   requestId: string;
-  documentType: string;
+  documentType: DocumentType;
   purpose: string;
   requestDate: string;
   copies: number;
@@ -59,6 +79,8 @@ export default function IssuanceDashboard() {
 
   // Filter states
   const [dateFilter, setDateFilter] = useState('All');
+  const [monthFilter, setMonthFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
   const [purokFilter, setPurokFilter] = useState('All');
   const [docTypeFilter, setDocTypeFilter] = useState('All');
   const [employmentFilter, setEmploymentFilter] = useState('All');
@@ -88,15 +110,28 @@ export default function IssuanceDashboard() {
   // Helper: get requestor info safely
   const getRequestor = (doc: DocumentData): RequestorInfo => doc.requestorInformation || {} as RequestorInfo;
 
+  // --- Date/Month/Year Filter Logic ---
+  // Extract all unique months and years from the dataset
+  const allMonths = useMemo(() => {
+    const set = new Set<number>();
+    documents.forEach(doc => set.add(new Date(doc.createdAt).getMonth()));
+    return Array.from(set).sort((a, b) => a - b);
+  }, [documents]);
+  const allYears = useMemo(() => {
+    const set = new Set<number>();
+    documents.forEach(doc => set.add(new Date(doc.createdAt).getFullYear()));
+    return Array.from(set).sort((a, b) => a - b);
+  }, [documents]);
+
   // Filtering logic
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc: DocumentData) => {
       const req = getRequestor(doc);
       // Date filter
       let dateOk = true;
+      const created = new Date(doc.createdAt);
       if (dateFilter !== 'All') {
         const now = new Date();
-        const created = new Date(doc.createdAt);
         if (dateFilter === 'Today') {
           dateOk = created.toDateString() === now.toDateString();
         } else if (dateFilter === 'This Week') {
@@ -108,6 +143,15 @@ export default function IssuanceDashboard() {
         } else if (dateFilter === 'This Year') {
           dateOk = created.getFullYear() === now.getFullYear();
         }
+      }
+      // Month/year filter
+      let monthOk = true;
+      if (monthFilter !== 'All') {
+        monthOk = created.getMonth() === Number(monthFilter);
+      }
+      let yearOk = true;
+      if (yearFilter !== 'All') {
+        yearOk = created.getFullYear() === Number(yearFilter);
       }
       // Purok
       const purokOk = purokFilter === 'All' || req.purok === purokFilter;
@@ -123,7 +167,6 @@ export default function IssuanceDashboard() {
         if (priorityFilter === 'PWD') priorityOk = req.pwd;
         else if (priorityFilter === '4Ps') priorityOk = req.fourPsBeneficiary;
         else if (priorityFilter === 'Solo Parent') priorityOk = req.soloParent;
-        else if (priorityFilter === 'Senior') priorityOk = req.age >= 60;
       }
       // Age
       let ageOk = true;
@@ -131,9 +174,9 @@ export default function IssuanceDashboard() {
         if (ageFilter === '24+') ageOk = req.age >= 24;
         else ageOk = req.age === Number(ageFilter);
       }
-      return dateOk && purokOk && docTypeOk && empOk && genderOk && priorityOk && ageOk;
+      return dateOk && monthOk && yearOk && purokOk && docTypeOk && empOk && genderOk && priorityOk && ageOk;
     });
-  }, [documents, dateFilter, purokFilter, docTypeFilter, employmentFilter, genderFilter, priorityFilter, ageFilter]);
+  }, [documents, dateFilter, monthFilter, yearFilter, purokFilter, docTypeFilter, employmentFilter, genderFilter, priorityFilter, ageFilter]);
 
   // Stats and charts use filteredDocuments
   const total = filteredDocuments.length;
@@ -152,9 +195,95 @@ export default function IssuanceDashboard() {
       month: m,
       Pending: monthDocs.filter((d: DocumentData) => !d.approved.status && !d.decline.status).length,
       Approved: monthDocs.filter((d: DocumentData) => d.approved.status).length,
-      Declined: monthDocs.filter((d: DocumentData) => d.decline.status).length,
+      Endorsed: monthDocs.filter((d: DocumentData) => d.decline.status).length,
     };
   });
+
+  // --- Improved Statistical Prediction ---
+  // Build a time series: each month-year with its total requests, based on filteredDocuments
+  const filteredTimeSeries = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredDocuments.forEach(doc => {
+      const d = new Date(doc.createdAt);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    // Sort keys chronologically
+    return Array.from(map.entries())
+      .map(([key, value]) => ({ key: String(key), value }))
+      .sort((a, b) => {
+        const [ay, am] = a.key.split('-').map(Number);
+        const [by, bm] = b.key.split('-').map(Number);
+        return ay !== by ? ay - by : am - bm;
+      });
+  }, [filteredDocuments]);
+
+  // Prepare last 12 months for sparkline
+  const last12 = filteredTimeSeries.slice(-12);
+  const sparkData = last12.map((d, i) => ({
+    month: i + 1,
+    value: d.value,
+    label: d.key,
+  }));
+
+  // Linear Regression Prediction (filtered)
+  let nextMonthPrediction: number | null = null;
+  let trend: 'up' | 'down' | 'flat' = 'flat';
+  let lrValue: number | null = null;
+  let lrSlope: number | null = null;
+  if (filteredTimeSeries.length >= 6) {
+    const x = filteredTimeSeries.map((_, i) => i);
+    const y = filteredTimeSeries.map(item => item.value);
+    const lr = ss.linearRegression(x.map((xi, i) => [xi, y[i]]));
+    const lrLine = ss.linearRegressionLine(lr);
+    lrValue = Math.round(lrLine(filteredTimeSeries.length));
+    lrSlope = lr.m;
+    nextMonthPrediction = lrValue;
+    if (lrSlope > 0.5) trend = 'up';
+    else if (lrSlope < -0.5) trend = 'down';
+    else trend = 'flat';
+  }
+
+  // Exponential Smoothing Prediction (filtered)
+  let esValue: number | null = null;
+  if (filteredTimeSeries.length >= 6) {
+    const alpha = 0.5;
+    let s = filteredTimeSeries[0].value;
+    for (let i = 1; i < filteredTimeSeries.length; i++) {
+      s = alpha * filteredTimeSeries[i].value + (1 - alpha) * s;
+    }
+    esValue = Math.round(s);
+  }
+
+  // Show both predictions if they differ by >10%
+  let showBoth = false;
+  if (lrValue && esValue && Math.abs(lrValue - esValue) / Math.max(lrValue, esValue) > 0.1) {
+    showBoth = true;
+  }
+
+  // --- Additional Insights ---
+  let avgPerMonth: number | null = null;
+  let highestMonth: { label: string; value: number } | null = null;
+  let lowestMonth: { label: string; value: number } | null = null;
+  let momChange: number | null = null;
+  let momTrend: 'up' | 'down' | 'flat' = 'flat';
+  if (filteredTimeSeries.length > 0) {
+    const vals = filteredTimeSeries.map(d => d.value);
+    avgPerMonth = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+    const maxIdx = vals.indexOf(Math.max(...vals));
+    const minIdx = vals.indexOf(Math.min(...vals));
+    highestMonth = { label: filteredTimeSeries[maxIdx].key, value: vals[maxIdx] };
+    lowestMonth = { label: filteredTimeSeries[minIdx].key, value: vals[minIdx] };
+    // Month-over-month change
+    if (filteredTimeSeries.length >= 2) {
+      const last = vals[vals.length - 1];
+      const prev = vals[vals.length - 2];
+      momChange = last - prev;
+      if (momChange > 0) momTrend = 'up';
+      else if (momChange < 0) momTrend = 'down';
+      else momTrend = 'flat';
+    }
+  }
 
   // Top requestors (by count)
   const topResidents = useMemo(() => {
@@ -228,12 +357,8 @@ export default function IssuanceDashboard() {
   const now = new Date();
   const thisYear = now.getFullYear();
   const lastYear = thisYear - 1;
-  const docTypes = [
-    'Barangay Clearance',
-    'Barangay Indigency',
-    'Barangay Residency',
-    'Business Permit',
-  ];
+  // Use DocumentType enum values dynamically
+  const docTypes = Object.values(DocumentType);
   const perCategoryData = docTypes.map(type => {
     const thisYearCount = filteredDocuments.filter(
       (d: DocumentData) => d.documentType === type && new Date(d.createdAt).getFullYear() === thisYear
@@ -248,12 +373,13 @@ export default function IssuanceDashboard() {
     };
   });
 
-  // Color mapping for document types
+  // Color mapping for document types (add fallback color)
   const docTypeColors: Record<string, string> = {
     'Barangay Clearance': '#012815',
-    'Barangay Indigency': '#145c3d',
-    'Barangay Residency': '#3d8c66',
+    'Certificate of Indigency': '#145c3d',
+    'Certificate of Residency': '#3d8c66',
     'Business Permit': '#4f6a1b',
+    'Barc Certificate': '#6b8827',
   };
 
   // Pie chart data for Employment
@@ -324,24 +450,17 @@ export default function IssuanceDashboard() {
   ];
 
   // Priority Category data
-//   const priorityCategories = [
-//     { name: 'Senior Citizen', key: 'senior' },
-//     { name: 'Solo Parent', key: 'soloParent' },
-//     { name: "4Ps Beneficiary", key: 'fourPsBeneficiary' },
-//   ];
-  let seniorCount = 0, soloParentCount = 0, fourPsCount = 0;
+  let soloParentCount = 0, fourPsCount = 0;
   filteredDocuments.forEach((doc: DocumentData) => {
     const req = getRequestor(doc);
-    if (req.age && req.age >= 65) seniorCount++;
     if (req.soloParent) soloParentCount++;
     if (req.fourPsBeneficiary) fourPsCount++;
   });
   const priorityData = [
-    { name: 'Senior Citizen', value: seniorCount },
     { name: 'Solo Parent', value: soloParentCount },
     { name: '4Ps Beneficiary', value: fourPsCount },
   ];
-  const priorityColors = ['#4f6a1b', '#b5c99a', '#28350a'];
+  const priorityColors = ['#b5c99a', '#28350a'];
 
   if (loading) return <div className="text-gray-800">Loading issuance dashboard...</div>;
 
@@ -361,7 +480,7 @@ export default function IssuanceDashboard() {
         </div>
         <div className="p-6 rounded-lg shadow-lg hover:shadow-2xl bg-white transition-shadow duration-300"> 
           <p className="text-3xl font-bold text-gray-900">{declined}</p>
-          <p className="text-lg font-medium text-gray-900">Declined</p>
+          <p className="text-lg font-medium text-gray-900">Endorsed</p>
           <p className="text-xs mt-2 text-gray-900">{total ? ((declined/total)*100).toFixed(0) : 0}% of Total</p>
           </div>
         <div className="p-6 rounded-lg shadow-lg hover:shadow-2xl bg-white transition-shadow duration-300"> 
@@ -372,40 +491,58 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Filters (UI only) */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <select className="border rounded px-3 py-2 text-gray-900" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
-          <option value="All">By Date</option>
+      <div className="flex flex-wrap gap-2 items-center mb-2">
+        <select className="border rounded px-2 py-1 text-gray-900" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
+          <option value="All">By Date (Quick)</option>
           <option value="Today">Today</option>
           <option value="This Week">This Week</option>
           <option value="This Month">This Month</option>
           <option value="This Year">This Year</option>
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-3 py-2 text-gray-900" value={purokFilter} onChange={e => setPurokFilter(e.target.value)}>
-          <option value="All">By Purok</option>
-          <option value="Purok 1">Purok 1</option>
-          <option value="Purok 2">Purok 2</option>
-          <option value="Purok 3">Purok 3</option>
-          <option value="Purok 4">Purok 4</option>
-          <option value="Purok 5">Purok 5</option>
-          <option value="Purok 6">Purok 6</option>
-          <option value="Purok 7">Purok 7</option>
-          <option value="Purok 8">Purok 8</option>
+        <select className="border rounded px-2 py-1 text-gray-900" value={monthFilter} onChange={e => setMonthFilter(e.target.value)}>
+          <option value="All">By Month</option>
+          {allMonths.map(m => (
+            <option key={m} value={m}>{months[m]}</option>
+          ))}
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-3 py-2 text-gray-900" value={docTypeFilter} onChange={e => setDocTypeFilter(e.target.value)}>
+        <select className="border rounded px-2 py-1 text-gray-900" value={yearFilter} onChange={e => setYearFilter(e.target.value)}>
+          <option value="All">By Year</option>
+          {allYears.map(y => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+          <option value="All">All</option>
+        </select>
+        <select
+          className="border rounded px-3 py-2 text-gray-900"
+          value={purokFilter}
+          onChange={e => setPurokFilter(e.target.value)}
+        >
+          <option value="All">By Purok</option>
+          {Object.values(Purok).map(purok => (
+            <option key={purok} value={purok}>
+              {purok.charAt(0).toUpperCase() + purok.slice(1).replace('purok', 'Purok ')}
+            </option>
+          ))}
+          <option value="All">All</option>
+        </select>
+        <select
+          className="border rounded px-3 py-2 text-gray-900"
+          value={docTypeFilter}
+          onChange={e => setDocTypeFilter(e.target.value)}
+        >
           <option value="All">By Document</option>
-          <option value="Barangay Clearance">Barangay Clearance</option>
-          <option value="Barangay Indigency">Barangay Indigency</option>
-          <option value="Barangay Residency">Barangay Residency</option>
-          <option value="Business Permit">Business Permit</option>
+          {Object.values(DocumentType).map(type => (
+            <option key={type} value={type}>{type}</option>
+          ))}
           <option value="All">All</option>
         </select>
         <select className="border rounded px-3 py-2 text-gray-900" value={employmentFilter} onChange={e => setEmploymentFilter(e.target.value)}>
           <option value="All">By Employment</option>
-          <option value="Employed">Employed</option>
-          <option value="Unemployed">Unemployed</option>
-          <option value="Self-Employed">Self-Employed</option>
+          <option value="employed">Employed</option>
+          <option value="unemployed">Unemployed</option>
+          <option value="self-employed">Self-Employed</option>
           <option value="All">All</option>
         </select>
         <select className="border rounded px-3 py-2 text-gray-900" value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
@@ -419,7 +556,6 @@ export default function IssuanceDashboard() {
           <option value="PWD">PWD</option>
           <option value="4Ps">4Ps</option>
           <option value="Solo Parent">Solo Parent</option>
-          <option value="Senior">Senior</option>
           <option value="All">All</option>
         </select>
         <select className="border rounded px-3 py-2 text-gray-900" value={ageFilter} onChange={e => setAgeFilter(e.target.value)}>
@@ -450,9 +586,69 @@ export default function IssuanceDashboard() {
             <Legend />
             <Bar dataKey="Pending" fill="#28350a" />
             <Bar dataKey="Approved" fill="#497641" />
-            <Bar dataKey="Declined" fill="#dc3545" />
+            <Bar dataKey="Endorsed" fill="#dc3545" />
             </BarChart>
         </ResponsiveContainer>
+        <div className="mt-4 p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 flex flex-col items-center md:items-start">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-bold text-green-900 text-lg">Prediction & Insights</span>
+              <FaInfoCircle className="text-green-700" title="Prediction and insights are based on the currently filtered data (min. 6 months for prediction)." />
+            </div>
+            {filteredTimeSeries.length >= 6 && nextMonthPrediction !== null ? (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl font-bold text-green-800">{nextMonthPrediction}</span>
+                  {trend === 'up' && <FaArrowUp className="text-green-600" title="Upward trend" />}
+                  {trend === 'down' && <FaArrowDown className="text-red-600" title="Downward trend" />}
+                  {trend === 'flat' && <FaMinus className="text-gray-500" title="Flat trend" />}
+                </div>
+                <div className="text-xs text-green-800 mb-1">Estimated total requests for next month</div>
+                {showBoth && (
+                  <div className="text-xs text-yellow-700">Exponential Smoothing: <span className="font-bold">{esValue}</span></div>
+                )}
+                <div className="text-xs text-green-900 mb-2">Model: Linear Regression{showBoth ? ' & Exponential Smoothing' : ''}</div>
+                {/* Additional Insights */}
+                <div className="mt-2 space-y-1 w-full">
+                  {avgPerMonth !== null && (
+                    <div className="flex items-center gap-2 text-sm text-green-800">
+                      <span className="font-semibold">Avg/month:</span> <span>{avgPerMonth}</span>
+                    </div>
+                  )}
+                  {highestMonth && (
+                    <div className="flex items-center gap-2 text-sm text-green-700">
+                      <span className="font-semibold">Highest:</span> <span>{months[Number(highestMonth.label.split('-')[1])]} {highestMonth.label.split('-')[0]} ({highestMonth.value})</span>
+                    </div>
+                  )}
+                  {lowestMonth && (
+                    <div className="flex items-center gap-2 text-sm text-yellow-700">
+                      <span className="font-semibold">Lowest:</span> <span>{months[Number(lowestMonth.label.split('-')[1])]} {lowestMonth.label.split('-')[0]} ({lowestMonth.value})</span>
+                    </div>
+                  )}
+                  {momChange !== null && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-semibold text-green-800">MoM Change:</span>
+                      <span className={momTrend === 'up' ? 'text-green-700' : momTrend === 'down' ? 'text-red-700' : 'text-gray-700'}>
+                        {momChange > 0 ? '+' : ''}{momChange} {momTrend === 'up' && <FaArrowUp className="inline text-green-600" />} {momTrend === 'down' && <FaArrowDown className="inline text-red-600" />} {momTrend === 'flat' && <FaMinus className="inline text-gray-500" />}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-green-800 mt-1">Not enough data for prediction (min. 6 months).</div>
+            )}
+          </div>
+          {/* Sparkline */}
+          <div className="w-full md:w-48 h-16 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height={60}>
+              <LineChart data={sparkData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <Line type="monotone" dataKey="value" stroke="#059669" strokeWidth={2} dot={false} />
+                <Tooltip formatter={(v, n, p) => [`${v}`, `${sparkData[p?.payload?.month - 1]?.label || ''}`]} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* Top Requestors Placeholder */}
@@ -504,7 +700,7 @@ export default function IssuanceDashboard() {
                     key={type}
                     dataKey={row => row.type === type ? row.thisYear : 0}
                     name={`${type} (This Year)`}
-                    fill={docTypeColors[type]}
+                    fill={docTypeColors[type] || '#b5c99a'}
                     isAnimationActive={false}
                     barSize={18}
                     legendType="circle"

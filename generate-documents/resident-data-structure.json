@@ -1,0 +1,65 @@
+{
+    // System fields
+    username: string,           // Auto-generated, e.g. "RICXXREC0104"
+    role: "resident",           // Always "resident"
+    createdAt: Date,
+    updatedAt: Date,
+  
+    // Personal Information
+    firstName: string,          // Any non-empty string
+    middleName: string,         // Any string (can be empty)
+    lastName: string,           // Any non-empty string
+    extName: string,            // "", "Jr.", "Sr.", "III", etc. (optional)
+    fullName: string,           // Auto-generated: first + middle + last
+  
+    // Birth Information
+    birthday: Date,             // Any date at least 13 years ago
+    birthPlace: string,         // Any non-empty string
+    age: number,                // Integer, must be >= 13
+  
+    // Personal Details
+    gender: "male" | "female",
+    civilStatus: "single" | "married" | "widow" | "separated",
+    nationality: string,        // Usually "Filipino", but can be any string
+    religion: string,           // Any string
+  
+    // Contact Information
+    email: string,              // Valid email address
+    password: string,           // Hashed password
+    phoneNumber: string,        // Any string (usually 11 digits in PH, e.g. "09171234567")
+  
+    // Address
+    houseNo: string,            // Any string (e.g. "123", "Blk 4 Lot 5")
+    purok: "purok1" | "purok2" | "purok3" | "purok4" | "purok5" | "purok6" | "purok7",
+  
+    // Work and Status
+    workingStatus: "employed" | "unemployed" | "self-employed",
+    sourceOfIncome: string,     // Any string (e.g. "Farming", "Business", "")
+  
+    // Additional Information
+    votingStatus: "registered" | "not-registered",
+    educationalAttainment:
+      | "elementary"
+      | "highschool"
+      | "vocational"
+      | "college"
+      | "postgraduate",
+  
+    // Status Information
+    soloParent: boolean,        // true if "yes", false if "no"
+    fourPsBeneficiary: boolean, // true if "yes", false if "no"
+    pwd: boolean,               // true if "yes", false if "no"
+    pwdType: (
+      | "Visual Disability"
+      | "Hearing Disability"
+      | "Speech and Language Disability"
+      | "Orthopedic Disability"
+      | "Mental Disability"
+      | "Psychosocial Disability"
+      | "Learning Disability"
+      | "Multiple Disabilities"
+      | "Chronic Illness"
+      | "Others"
+      | null
+    ) // Only if pwd is true, otherwise null
+  }

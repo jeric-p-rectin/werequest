@@ -16,7 +16,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session) {
+  if (!session || !['admin', 'super admin'].includes(session.user.role)) {
     redirect('/');
   }
 

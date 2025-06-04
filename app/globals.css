@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Force hex/rgb colors for html2canvas PDF export */
+#export-section, #export-section * {
+  color: #111827 !important;
+  background-color: #fff !important;
+  border-color: #e5e7eb !important;
+  /* Add more overrides as needed for your design */
+}

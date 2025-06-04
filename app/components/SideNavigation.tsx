@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { BiSolidDashboard } from "react-icons/bi";
 import { HiDocumentText } from "react-icons/hi";
-import { FaUsers, FaBuilding, FaExclamationTriangle, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaUsers, FaBuilding, FaExclamationTriangle, FaUserCircle } from "react-icons/fa";
 import { FaBullhorn } from "react-icons/fa";
 import Image from 'next/image';
 
@@ -58,12 +58,14 @@ const SideNavigation = () => {
     item.roles.includes(session?.user?.role || '')
   );
 
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
-  };
+  // Conditionally apply fixed class only on /announcement page
+  const isAnnouncementPage = pathname === '/announcement';
+  const sidebarClass = isAnnouncementPage
+    ? 'fixed left-0 top-0 h-screen z-40 flex flex-col shadow-sm'
+    : 'flex flex-col h-screen shadow-sm';
 
   return (
-    <div className="flex flex-col h-screen shadow-sm" style={{ background: "radial-gradient(#4d5f30, #34450e)" }}>
+    <div className={sidebarClass} style={{ background: "radial-gradient(#4d5f30, #34450e)" }}>
       {/* User Profile Section */}
       <div className="p-4 flex items-center gap-4 border-b border-white/20">
         <Link href="/profile" className="block">
@@ -103,17 +105,6 @@ const SideNavigation = () => {
             );
           })}
         </nav>
-      </div>
-
-      {/* Sign Out Button */}
-      <div className="p-4 border-t border-white/20">
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/80 hover:bg-white/10 transition-colors"
-        >
-          <FaSignOutAlt className="w-5 h-5" />
-          <span>Sign Out</span>
-        </button>
       </div>
 
       {/* Footer Logo Section */}
