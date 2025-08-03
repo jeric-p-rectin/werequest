@@ -118,7 +118,7 @@ const SideNavigation = () => {
               height={40}
               className="h-10 w-auto"
             />
-            <span className="ml-3 text-xl font-semibold text-gray-800">WeRequest</span>
+            <span className="ml-3 text-xl font-semibold text-white">WeRequest</span>
           </div>
         </div>
       </div>

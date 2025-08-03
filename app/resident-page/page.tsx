@@ -167,7 +167,6 @@ export default function HomePage() {
         )}
         {activeSection === 'request' && (
           <>
-            <h1 className="text-3xl font-bold text-green-700 mb-6">Request Services</h1>
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
                 <div>

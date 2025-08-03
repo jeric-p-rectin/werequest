@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface RequestForm {
+  requestedFor: string;
   fullName: string;
   documentType: string;
   copies: number;
@@ -13,7 +15,13 @@ interface RequestDocumentProps {
   onBack: () => void;
 }
 
+interface Resident {
+  _id: string;
+  fullName: string;
+}
+
 const initialFormState: RequestForm = {
+  requestedFor: '',
   fullName: '',
   documentType: '',
   copies: 1,
@@ -21,10 +29,13 @@ const initialFormState: RequestForm = {
 };
 
 export default function RequestDocument({ onBack }: RequestDocumentProps) {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formDataList, setFormDataList] = useState<RequestForm[]>([initialFormState]);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [loadingResidents, setLoadingResidents] = useState(true);
 
   const documentTypes = [
     'Barangay Clearance',
@@ -40,11 +51,44 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
     'Medical'
   ];
 
+  // Fetch residents on component mount
+  useEffect(() => {
+    const fetchResidents = async () => {
+      try {
+        const response = await fetch('/api/resident/get-all-residents-name');
+        const data = await response.json();
+        if (response.ok) {
+          setResidents(data.data);
+        } else {
+          console.error('Failed to fetch residents:', data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching residents:', error);
+      } finally {
+        setLoadingResidents(false);
+      }
+    };
+
+    fetchResidents();
+  }, []);
+
   const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormDataList(prev => prev.map((form, i) =>
-      i === index ? { ...form, [name]: name === 'copies' ? Number(value) : value } : form
-    ));
+    setFormDataList(prev => prev.map((form, i) => {
+      if (i === index) {
+        const updatedForm = { ...form, [name]: name === 'copies' ? Number(value) : value };
+        
+        // If requestedFor is "For Myself", set fullName to session user's fullName
+        if (name === 'requestedFor' && value === 'For Myself') {
+          updatedForm.fullName = session?.user?.fullName || '';
+        } else if (name === 'requestedFor' && value === 'For Others') {
+          updatedForm.fullName = '';
+        }
+        
+        return updatedForm;
+      }
+      return form;
+    }));
   };
 
   const handleAddNew = () => {
@@ -65,6 +109,7 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
     console.log('Validating forms:', formDataList);
     for (const form of formDataList) {
       if (
+        !form.requestedFor.trim() ||
         !form.fullName.trim() ||
         !form.documentType.trim() ||
         !form.purpose.trim() ||
@@ -135,20 +180,56 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
               </button>
             )}
             <div className="space-y-4">
+              {/* Requested For Field */}
+              <div className="field">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Requested for:
+                </label>
+                <select
+                  name="requestedFor"
+                  value={formData.requestedFor}
+                  onChange={e => handleChange(idx, e)}
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                >
+                  <option value="" className="text-gray-500">Select</option>
+                  <option value="For Myself" className="text-gray-900">For Myself</option>
+                  <option value="For Others" className="text-gray-900">For Others</option>
+                </select>
+              </div>
+
               {/* Name Field */}
               <div className="field">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name (as registered)
                 </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={e => handleChange(idx, e)}
-                  required
-                  placeholder="Enter your complete name as registered"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-                />
+                {formData.requestedFor === 'For Myself' ? (
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    readOnly
+                    className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+                  />
+                ) : (
+                  <select
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={e => handleChange(idx, e)}
+                    required
+                    disabled={loadingResidents}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 disabled:bg-gray-100"
+                  >
+                    <option value="" className="text-gray-500">
+                      {loadingResidents ? 'Loading residents...' : 'Select resident'}
+                    </option>
+                    {residents.map((resident) => (
+                      <option key={resident._id} value={resident.fullName} className="text-gray-900">
+                        {resident.fullName}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {/* Document Type Field */}
@@ -185,8 +266,6 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
                   <option value={1} className="text-gray-900">1</option>
                   <option value={2} className="text-gray-900">2</option>
                   <option value={3} className="text-gray-900">3</option>
-                  <option value={4} className="text-gray-900">4</option>
-                  <option value={5} className="text-gray-900">5</option>
                 </select>
               </div>
 
@@ -229,13 +308,15 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
 
       {/* Action Buttons */}
       <div className="w-full flex justify-end items-center gap-3 mt-6">
-        <button
-          type="button"
-          onClick={handleAddNew}
-          className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
-        >
-          Add New
-        </button>
+        {formDataList.length < 5 && (
+          <button
+            type="button"
+            onClick={handleAddNew}
+            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
+          >
+            Add New
+          </button>
+        )}
         <button
           type="submit"
           disabled={isLoading}

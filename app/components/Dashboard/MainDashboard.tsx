@@ -5,21 +5,7 @@ import BlotterAnalytics from './Blotter';
 import IssuanceAnalytics from './Issuance';
 import SideNavigation from '../SideNavigation';
 
-// interface ResidentData {
-//   _id: string;
-//   fullName: string;
-//   gender: string;
-//   age: number;
-//   pwd: boolean;
-//   soloParent: boolean;
-//   fourPsBeneficiary: boolean;
-//   civilStatus: string;
-//   educationalAttainment: string;
-//   votingStatus: string;
-// }
-
 export default function MainDashboard() {
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Navigation state for dashboard
   const [activeTab, setActiveTab] = useState<'issuance' | 'blotter'>('issuance');
@@ -37,16 +23,14 @@ export default function MainDashboard() {
         }
       } catch {
         setError('Error fetching resident data');
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
 
     fetchResidents();
   }, []);
 
-  if (loading) return <div>Loading dashboard...</div>;
   if (error) return <div>Error: {error}</div>;
+
 
   return (
     <div className="flex h-screen bg-gray-100">
