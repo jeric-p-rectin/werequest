@@ -123,7 +123,7 @@ export default function Home() {
             Forgot Password
           </Link>
           <div className="w-full flex items-center justify-center mt-2">
-            <p className="text-sm text-black">Don't have an account?</p>
+            <p className="text-sm text-black">Don&apos;t have an account?</p>
           </div>
           <button 
             type="button"
