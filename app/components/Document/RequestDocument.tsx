@@ -9,6 +9,9 @@ interface RequestForm {
   documentType: string;
   copies: number;
   purpose: string;
+  proofOfAuthority?: string | null; // Changed to string for base64
+  proofOfAuthorityName?: string | null; // Added to store original filename
+  proofOfAuthoritySize?: number | null; // Added to store file size
 }
 
 interface RequestDocumentProps {
@@ -25,7 +28,10 @@ const initialFormState: RequestForm = {
   fullName: '',
   documentType: '',
   copies: 1,
-  purpose: ''
+  purpose: '',
+  proofOfAuthority: null,
+  proofOfAuthorityName: null,
+  proofOfAuthoritySize: null
 };
 
 export default function RequestDocument({ onBack }: RequestDocumentProps) {
@@ -36,6 +42,8 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
   const [formDataList, setFormDataList] = useState<RequestForm[]>([initialFormState]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loadingResidents, setLoadingResidents] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const documentTypes = [
     'Barangay Clearance',
@@ -72,6 +80,11 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
     fetchResidents();
   }, []);
 
+  // Filter residents based on search term
+  const filteredResidents = residents.filter(resident =>
+    resident.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormDataList(prev => prev.map((form, i) => {
@@ -89,6 +102,84 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
       }
       return form;
     }));
+  };
+
+  const handleFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    
+    if (file) {
+      // Check file size (10MB limit)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        setError('File size must be less than 10MB');
+        return;
+      }
+
+      try {
+        // Convert file to base64
+        const base64 = await convertFileToBase64(file);
+        
+        setFormDataList(prev => prev.map((form, i) => {
+          if (i === index) {
+            return {
+              ...form,
+              proofOfAuthority: base64,
+              proofOfAuthorityName: file.name,
+              proofOfAuthoritySize: file.size
+            };
+          }
+          return form;
+        }));
+        
+        setError(''); // Clear any previous errors
+      } catch (error) {
+        setError('Error processing file. Please try again.');
+        console.error('Error converting file to base64:', error);
+      }
+    } else {
+      // Clear file data if no file selected
+      setFormDataList(prev => prev.map((form, i) => {
+        if (i === index) {
+          return {
+            ...form,
+            proofOfAuthority: null,
+            proofOfAuthorityName: null,
+            proofOfAuthoritySize: null
+          };
+        }
+        return form;
+      }));
+    }
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleResidentSelect = (index: number, residentName: string) => {
+    setFormDataList(prev => prev.map((form, i) => {
+      if (i === index) {
+        return { ...form, fullName: residentName };
+      }
+      return form;
+    }));
+    setSearchTerm('');
+    setShowDropdown(false);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setShowDropdown(true);
   };
 
   const handleAddNew = () => {
@@ -124,12 +215,24 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
     }
 
     try {
+      // Prepare the data with base64 files
+      const requestsData = formDataList.map(form => ({
+        requestedFor: form.requestedFor,
+        fullName: form.fullName,
+        documentType: form.documentType,
+        copies: form.copies,
+        purpose: form.purpose,
+        proofOfAuthority: form.proofOfAuthority,
+        proofOfAuthorityName: form.proofOfAuthorityName,
+        proofOfAuthoritySize: form.proofOfAuthoritySize
+      }));
+
       const response = await fetch('/api/document/request-document', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ requests: formDataList }),
+        body: JSON.stringify({ requests: requestsData }),
       });
 
       const data = await response.json();
@@ -149,6 +252,14 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -212,23 +323,61 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
                     className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
                   />
                 ) : (
-                  <select
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={e => handleChange(idx, e)}
-                    required
-                    disabled={loadingResidents}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 disabled:bg-gray-100"
-                  >
-                    <option value="" className="text-gray-500">
-                      {loadingResidents ? 'Loading residents...' : 'Select resident'}
-                    </option>
-                    {residents.map((resident) => (
-                      <option key={resident._id} value={resident.fullName} className="text-gray-900">
-                        {resident.fullName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={loadingResidents ? 'Loading residents...' : 'Search for resident...'}
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      onFocus={() => setShowDropdown(true)}
+                      disabled={loadingResidents}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 disabled:bg-gray-100"
+                    />
+                    
+                    {/* Selected resident display */}
+                    {formData.fullName && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                        <span className="text-sm text-green-800 font-medium">Selected: {formData.fullName}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDataList(prev => prev.map((form, i) => {
+                              if (i === idx) {
+                                return { ...form, fullName: '' };
+                              }
+                              return form;
+                            }));
+                            setSearchTerm('');
+                          }}
+                          className="ml-2 text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Search dropdown */}
+                    {showDropdown && searchTerm && !loadingResidents && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {filteredResidents.length > 0 ? (
+                          filteredResidents.map((resident) => (
+                            <button
+                              key={resident._id}
+                              type="button"
+                              onClick={() => handleResidentSelect(idx, resident.fullName)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                            >
+                              {resident.fullName}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-gray-500 text-sm">
+                            No residents found matching "{searchTerm}"
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -286,6 +435,63 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
                     <option key={purpose} value={purpose} className="text-gray-900">{purpose}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Proof of Authority Field */}
+              <div className="field">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Proof of Authority
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                    onChange={e => handleFileChange(idx, e)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF (Max size: 10MB)
+                  </p>
+                  
+                  {/* Display selected file info */}
+                  {formData.proofOfAuthority && formData.proofOfAuthorityName && (
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">{formData.proofOfAuthorityName}</p>
+                            {formData.proofOfAuthoritySize && (
+                              <p className="text-xs text-blue-600">{formatFileSize(formData.proofOfAuthoritySize)}</p>
+                            )}
+                            <p className="text-xs text-blue-500">Base64 encoded</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDataList(prev => prev.map((form, i) => {
+                              if (i === idx) {
+                                return {
+                                  ...form,
+                                  proofOfAuthority: null,
+                                  proofOfAuthorityName: null,
+                                  proofOfAuthoritySize: null
+                                };
+                              }
+                              return form;
+                            }));
+                          }}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

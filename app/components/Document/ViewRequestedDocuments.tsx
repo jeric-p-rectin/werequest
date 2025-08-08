@@ -5,55 +5,17 @@ import { useSession } from 'next-auth/react';
 import { FaCheck, FaTimes, FaClock } from 'react-icons/fa';
 
 interface DocumentRequest {
+  _id: string;
   requestId: string;
-  requestorInformation: {
-    firstName: string;
-    middleName: string;
-    lastName: string;
-    extName: string;
-    fullName: string;
-    birthday: string;
-    birthPlace: string;
-    age: number;
-    gender: string;
-    civilStatus: string;
-    nationality: string;
-    religion: string;
-    email: string;
-    phoneNumber: string;
-    houseNo: string;
-    purok: string;
-    workingStatus: string;
-    sourceOfIncome: string;
-    votingStatus: string;
-    educationalAttainment: string;
-    soloParent: string;
-    fourPsBeneficiary: string;
-    pwd: string;
-    pwdType: string;
-    role: string;
-    _id: string;
-  };
+  requestedFor: string;
+  fullName: string;
   documentType: string;
   copies: number;
   purpose: string;
-  requestDate: string;
-  decline: {
-    status: boolean;
-    reason: string | null;
-    declinedBy: string | null;
-    declinedAt: string | null;
-  };
-  verify: {
-    status: boolean;
-    verifiedBy: string | null;
-    verifiedAt: string | null;
-  };
-  approved: {
-    status: boolean;
-    approvedBy: string | null;
-    approvedAt: string | null;
-  };
+  proofOfAuthority?: string | null;
+  proofOfAuthorityName?: string | null;
+  proofOfAuthoritySize?: number | null;
+  status: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -85,7 +47,7 @@ export default function ViewRequestedDocuments() {
 
         // Filter documents for the current resident
         const userDocuments = result.data.filter(
-          (doc: DocumentRequest) => doc.requestorInformation?.fullName === session?.user?.fullName
+          (doc: DocumentRequest) => doc.fullName === session?.user?.fullName
         );
         
         setDocuments(userDocuments);
@@ -121,22 +83,22 @@ export default function ViewRequestedDocuments() {
   }
 
   const getStatusIcon = (doc: DocumentRequest) => {
-    if (doc.decline.status) {
+    if (doc.status === 'declined') {
       return <FaTimes className="text-red-500 w-5 h-5" title="Declined" />;
     }
-    if (doc.approved.status) {
+    if (doc.status === 'approved') {
       return <FaCheck className="text-green-500 w-5 h-5" title="Approved" />;
     }
-    if (doc.verify.status) {
+    if (doc.status === 'verified') {
       return <FaCheck className="text-blue-500 w-5 h-5" title="Verified" />;
     }
     return <FaClock className="text-yellow-500 w-5 h-5" title="Pending" />;
   };
 
   const getStatusText = (doc: DocumentRequest) => {
-    if (doc.decline.status) return 'Declined';
-    if (doc.approved.status) return 'Approved';
-    if (doc.verify.status) return 'Verified';
+    if (doc.status === 'declined') return 'Declined';
+    if (doc.status === 'approved') return 'Approved';
+    if (doc.status === 'verified') return 'Verified';
     return 'Pending';
   };
 
@@ -189,7 +151,7 @@ export default function ViewRequestedDocuments() {
                         {doc.copies}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(doc.requestDate).toLocaleDateString()}
+                        {new Date(doc.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
