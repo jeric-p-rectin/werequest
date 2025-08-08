@@ -372,7 +372,7 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
                           ))
                         ) : (
                           <div className="px-4 py-2 text-gray-500 text-sm">
-                            No residents found matching "{searchTerm}"
+                            No residents found matching &ldquo;{searchTerm}&ldquo;
                           </div>
                         )}
                       </div>
