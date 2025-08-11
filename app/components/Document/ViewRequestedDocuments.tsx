@@ -74,7 +74,7 @@ interface FolderGroup {
 
 export default function ViewRequestedDocuments() {
   const { data: session } = useSession();
-  const [documents, setDocuments] = useState<DocumentRequest[]>([]);
+  const [, setDocuments] = useState<DocumentRequest[]>([]);
   const [folderGroups, setFolderGroups] = useState<FolderGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
