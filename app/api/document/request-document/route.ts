@@ -114,55 +114,55 @@ export async function POST(request: Request) {
         continue;
       }
 
-      // Generate a unique requestId
+      // Prepare dates
       const date = new Date();
+      const dateOnly = date.toISOString().split("T")[0];
+
+      // Check if a folderId already exists for this user on this date
+      let folderId: string;
+      const existingDoc = await db.collection("documents").findOne({
+        "requestorInformation._id": getRequestorInformation._id,
+        folderId: { $regex: `^${getRequestorInformation._id}_${dateOnly}$` }
+      });
+
+      if (existingDoc) {
+        folderId = existingDoc.folderId; // reuse existing folderId for same day
+      } else {
+        folderId = `${getRequestorInformation._id}_${dateOnly}`;
+      }
+
+      // Generate a unique requestId
       const requestId = `DOC-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${Math.random().toString(36).substr(2, 6)}`;
 
       // Create document request record
       const documentRequest = {
         requestId,
+        folderId, // <-- NEW
         requestorInformation: {
-          // Personal Information
           firstName: getRequestorInformation.firstName,
           middleName: getRequestorInformation.middleName,
           lastName: getRequestorInformation.lastName,
           extName: getRequestorInformation.extName,
           fullName: getRequestorInformation.fullName,
-
-          // Birth Information
           birthday: getRequestorInformation.birthday,
           birthPlace: getRequestorInformation.birthPlace,
           age: getRequestorInformation.age,
-
-          // Personal Details
           gender: getRequestorInformation.gender,
           civilStatus: getRequestorInformation.civilStatus,
           nationality: getRequestorInformation.nationality,
           religion: getRequestorInformation.religion,
-
-          // Contact Information
           email: getRequestorInformation.email,
           phoneNumber: getRequestorInformation.phoneNumber,
-
-          // Address
           houseNo: getRequestorInformation.houseNo,
           purok: getRequestorInformation.purok,
-
-          // Work and Status
           workingStatus: getRequestorInformation.workingStatus,
           sourceOfIncome: getRequestorInformation.sourceOfIncome,
-
-          // Additional Information
           votingStatus: getRequestorInformation.votingStatus,
           educationalAttainment: getRequestorInformation.educationalAttainment,
-
-          // Status Information
           soloParent: getRequestorInformation.soloParent,
           fourPsBeneficiary: getRequestorInformation.fourPsBeneficiary,
           pwd: getRequestorInformation.pwd,
           pwdType: getRequestorInformation.pwdType,
-
-          // System fields
           role: getRequestorInformation.role,
           _id: getRequestorInformation._id
         },
