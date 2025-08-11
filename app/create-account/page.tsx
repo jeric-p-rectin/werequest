@@ -1,7 +1,9 @@
 "use client"
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function CreateAccountMockup() {
+    const router = useRouter()
     const [showPopup, setShowPopup] = useState(false)
     const [formData, setFormData] = useState({
         email: '',
@@ -67,7 +69,20 @@ export default function CreateAccountMockup() {
     return (
         <div className="flex items-center justify-center h-screen bg-black">
             <div className="absolute inset-0 bg-gradient-to-t from-[#34450e]/80 via-[#4d5f30]/60 to-transparent z-10" />
-            <form className="z-20 flex flex-col w-full bg-white max-w-md px-8 py-10 rounded-lg items-center justify-center">
+            
+            <form className="z-20 flex flex-col w-full bg-white max-w-md px-8 py-10 rounded-lg items-center justify-center relative">
+                {/* Back Button inside form */}
+                <button
+                    type="button"
+                    onClick={() => router.push('/')}
+                    className="absolute top-4 right-4 bg-[#4d5f30] hover:bg-[#3c5e1a] text-white px-3 py-1.5 rounded-full shadow-md transition-all duration-300 hover:shadow-lg flex items-center gap-1.5 text-sm"
+                >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </button>
+                
                 <img 
                     src="/images/logo.png" 
                     alt="Logo" 

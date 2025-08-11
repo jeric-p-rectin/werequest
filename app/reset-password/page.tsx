@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState('');
@@ -70,10 +71,25 @@ function ResetPasswordForm() {
   return (
     <main className="flex min-h-screen">
       {/* Left side with background */}
-      <div 
-        className="w-3/5 relative" 
-        style={{ background: "radial-gradient(#4d5f30, #34450e)" }}
-      ></div>
+      <div className="w-3/5 relative flex items-center justify-center overflow-hidden">
+        <Image
+          src="/images/baranggay hall.jpg"
+          alt="Barangay Hall of San Andres, Guimba"
+          fill
+          style={{ objectFit: 'cover' }}
+          priority
+          className="z-0"
+        />
+        {/* Overlay for visual effect */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#34450e]/80 via-[#4d5f30]/60 to-transparent z-10" />
+        {/* Description at the bottom left */}
+        <div className="absolute bottom-8 left-8 z-20 max-w-[80%]">
+          <h2 className="text-3xl font-bold text-white drop-shadow-lg mb-2">Barangay Hall of San Andres, Guimba</h2>
+          <p className="text-lg text-white drop-shadow-md bg-black/40 rounded-lg px-4 py-2">
+            The heart of our community, where service, unity, and progress begin. Welcome to Barangay San Andres, Guimba—your home, your future.
+          </p>
+        </div>
+      </div>
       
       {/* Right side with form */}
       <div className="w-2/5 bg-white flex items-center justify-center">
@@ -114,10 +130,11 @@ function ResetPasswordForm() {
                 />
                 <button 
                   type="button"
-                  className="absolute right-3 top-8 text-sm text-black"
+                  className="absolute cursor-pointer right-3 top-8 text-xl text-black"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? "hide" : "show"}
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
 
@@ -133,10 +150,11 @@ function ResetPasswordForm() {
                 />
                 <button 
                   type="button"
-                  className="absolute right-3 top-8 text-sm text-black"
+                  className="absolute cursor-pointer right-3 top-8 text-xl text-black"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
-                  {showConfirmPassword ? "hide" : "show"}
+                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
             </div>

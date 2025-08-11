@@ -38,7 +38,7 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [formDataList, setFormDataList] = useState<RequestForm[]>([initialFormState]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loadingResidents, setLoadingResidents] = useState(true);
@@ -194,8 +194,6 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setSuccess('');
-
     // Validate all forms
     console.log('Validating forms:', formDataList);
     for (const form of formDataList) {
@@ -241,17 +239,19 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
         throw new Error(data.error || 'Error submitting document requests');
       }
 
+      // Show success popup
+      setShowSuccessPopup(true);
       setFormDataList([initialFormState]);
-      setSuccess(
-        data.requestIds
-          ? `Document requests submitted successfully! Request IDs: ${data.requestIds.join(', ')}`
-          : 'Document requests submitted successfully!'
-      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error submitting requests');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGotIt = () => {
+    setShowSuccessPopup(false);
+    onBack(); // Go back to ViewDocuments
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -263,274 +263,296 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="h-auto w-[40%] p-10 bg-white rounded-lg shadow-lg flex flex-col justify-start items-start relative">
-      {/* Back Button */}
-      <button 
-        type="button"
-        onClick={onBack}
-        className="absolute right-5 top-5 text-gray-700 hover:text-gray-900"
-      >
-        ×
-      </button>
+    <>
+      <form onSubmit={handleSubmit} className="h-auto w-[40%] p-10 bg-white rounded-lg shadow-lg flex flex-col justify-start items-start relative">
+        {/* Back Button */}
+        <button 
+          type="button"
+          onClick={onBack}
+          className="absolute right-5 top-5 text-gray-700 hover:text-gray-900"
+        >
+          ×
+        </button>
 
-      {/* Title */}
-      <p className="text-2xl font-semibold text-gray-800">NEW REQUEST</p>
+        {/* Title */}
+        <p className="text-2xl font-semibold text-gray-800">NEW REQUEST</p>
 
-      {/* Multiple Forms */}
-      <div className="w-full mt-6 flex flex-col gap-6">
-        {formDataList.map((formData, idx) => (
-          <div key={idx} className="w-full border border-green-600 p-5 rounded-lg relative">
-            {formDataList.length > 1 && (
-              <button
-                type="button"
-                onClick={() => handleRemove(idx)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg"
-                title="Remove this request"
-              >
-                ×
-              </button>
-            )}
-            <div className="space-y-4">
-              {/* Requested For Field */}
-              <div className="field">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Requested for:
-                </label>
-                <select
-                  name="requestedFor"
-                  value={formData.requestedFor}
-                  onChange={e => handleChange(idx, e)}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+        {/* Multiple Forms */}
+        <div className="w-full mt-6 flex flex-col gap-6">
+          {formDataList.map((formData, idx) => (
+            <div key={idx} className="w-full border border-green-600 p-5 rounded-lg relative">
+              {formDataList.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(idx)}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg"
+                  title="Remove this request"
                 >
-                  <option value="" className="text-gray-500">Select</option>
-                  <option value="For Myself" className="text-gray-900">For Myself</option>
-                  <option value="For Others" className="text-gray-900">For Others</option>
-                </select>
-              </div>
+                  ×
+                </button>
+              )}
+              <div className="space-y-4">
+                {/* Requested For Field */}
+                <div className="field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Requested for:
+                  </label>
+                  <select
+                    name="requestedFor"
+                    value={formData.requestedFor}
+                    onChange={e => handleChange(idx, e)}
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value="" className="text-gray-500">Select</option>
+                    <option value="For Myself" className="text-gray-900">For Myself</option>
+                    <option value="For Others" className="text-gray-900">For Others</option>
+                  </select>
+                </div>
 
-              {/* Name Field */}
-              <div className="field">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name (as registered)
-                </label>
-                {formData.requestedFor === 'For Myself' ? (
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    readOnly
-                    className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-                  />
-                ) : (
-                  <div className="relative">
+                {/* Name Field */}
+                <div className="field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name (as registered)
+                  </label>
+                  {formData.requestedFor === 'For Myself' ? (
                     <input
                       type="text"
-                      placeholder={loadingResidents ? 'Loading residents...' : 'Search for resident...'}
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      onFocus={() => setShowDropdown(true)}
-                      disabled={loadingResidents}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 disabled:bg-gray-100"
+                      name="fullName"
+                      value={formData.fullName}
+                      readOnly
+                      className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
                     />
-                    
-                    {/* Selected resident display */}
-                    {formData.fullName && (
-                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                        <span className="text-sm text-green-800 font-medium">Selected: {formData.fullName}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormDataList(prev => prev.map((form, i) => {
-                              if (i === idx) {
-                                return { ...form, fullName: '' };
-                              }
-                              return form;
-                            }));
-                            setSearchTerm('');
-                          }}
-                          className="ml-2 text-red-500 hover:text-red-700 text-sm"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Search dropdown */}
-                    {showDropdown && searchTerm && !loadingResidents && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {filteredResidents.length > 0 ? (
-                          filteredResidents.map((resident) => (
-                            <button
-                              key={resident._id}
-                              type="button"
-                              onClick={() => handleResidentSelect(idx, resident.fullName)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
-                            >
-                              {resident.fullName}
-                            </button>
-                          ))
-                        ) : (
-                          <div className="px-4 py-2 text-gray-500 text-sm">
-                            No residents found matching &ldquo;{searchTerm}&ldquo;
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Document Type Field */}
-              <div className="field">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Type
-                </label>
-                <select
-                  name="documentType"
-                  value={formData.documentType}
-                  onChange={e => handleChange(idx, e)}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                >
-                  <option value="" className="text-gray-500">Select</option>
-                  {documentTypes.map((type) => (
-                    <option key={type} value={type} className="text-gray-900">{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Copies Field */}
-              <div className="field">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Copies
-                </label>
-                <select
-                  name="copies"
-                  value={formData.copies}
-                  onChange={e => handleChange(idx, e)}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                >
-                  <option value={1} className="text-gray-900">1</option>
-                  <option value={2} className="text-gray-900">2</option>
-                  <option value={3} className="text-gray-900">3</option>
-                </select>
-              </div>
-
-              {/* Purpose Field */}
-              <div className="field">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Purpose
-                </label>
-                <select
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={e => handleChange(idx, e)}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                >
-                  <option value="" className="text-gray-500">Select</option>
-                  {purposes.map((purpose) => (
-                    <option key={purpose} value={purpose} className="text-gray-900">{purpose}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Proof of Authority Field */}
-              <div className="field">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Proof of Authority
-                </label>
-                <div className="space-y-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
-                    onChange={e => handleFileChange(idx, e)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF (Max size: 10MB)
-                  </p>
-                  
-                  {/* Display selected file info */}
-                  {formData.proofOfAuthority && formData.proofOfAuthorityName && (
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-blue-800">{formData.proofOfAuthorityName}</p>
-                            {formData.proofOfAuthoritySize && (
-                              <p className="text-xs text-blue-600">{formatFileSize(formData.proofOfAuthoritySize)}</p>
-                            )}
-                            <p className="text-xs text-blue-500">Base64 encoded</p>
-                          </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder={loadingResidents ? 'Loading residents...' : 'Search for resident...'}
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        onFocus={() => setShowDropdown(true)}
+                        disabled={loadingResidents}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 disabled:bg-gray-100"
+                      />
+                      
+                      {/* Selected resident display */}
+                      {formData.fullName && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                          <span className="text-sm text-green-800 font-medium">Selected: {formData.fullName}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormDataList(prev => prev.map((form, i) => {
+                                if (i === idx) {
+                                  return { ...form, fullName: '' };
+                                }
+                                return form;
+                              }));
+                              setSearchTerm('');
+                            }}
+                            className="ml-2 text-red-500 hover:text-red-700 text-sm"
+                          >
+                            Clear
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormDataList(prev => prev.map((form, i) => {
-                              if (i === idx) {
-                                return {
-                                  ...form,
-                                  proofOfAuthority: null,
-                                  proofOfAuthorityName: null,
-                                  proofOfAuthoritySize: null
-                                };
-                              }
-                              return form;
-                            }));
-                          }}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                      )}
+
+                      {/* Search dropdown */}
+                      {showDropdown && searchTerm && !loadingResidents && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {filteredResidents.length > 0 ? (
+                            filteredResidents.map((resident) => (
+                              <button
+                                key={resident._id}
+                                type="button"
+                                onClick={() => handleResidentSelect(idx, resident.fullName)}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                              >
+                                {resident.fullName}
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-4 py-2 text-gray-500 text-sm">
+                              No residents found matching &ldquo;{searchTerm}&ldquo;
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
+
+                {/* Document Type Field */}
+                <div className="field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Document Type
+                  </label>
+                  <select
+                    name="documentType"
+                    value={formData.documentType}
+                    onChange={e => handleChange(idx, e)}
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value="" className="text-gray-500">Select</option>
+                    {documentTypes.map((type) => (
+                      <option key={type} value={type} className="text-gray-900">{type}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Copies Field */}
+                <div className="field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Copies
+                  </label>
+                  <select
+                    name="copies"
+                    value={formData.copies}
+                    onChange={e => handleChange(idx, e)}
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value={1} className="text-gray-900">1</option>
+                    <option value={2} className="text-gray-900">2</option>
+                    <option value={3} className="text-gray-900">3</option>
+                  </select>
+                </div>
+
+                {/* Purpose Field */}
+                <div className="field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Purpose
+                  </label>
+                  <select
+                    name="purpose"
+                    value={formData.purpose}
+                    onChange={e => handleChange(idx, e)}
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value="" className="text-gray-500">Select</option>
+                    {purposes.map((purpose) => (
+                      <option key={purpose} value={purpose} className="text-gray-900">{purpose}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Proof of Authority Field - Only show when requesting for others */}
+                {formData.requestedFor === 'For Others' && (
+                  <div className="field">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Proof of Authority
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                        onChange={e => handleFileChange(idx, e)}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF (Max size: 10MB)
+                      </p>
+                      
+                      {/* Display selected file info */}
+                      {formData.proofOfAuthority && formData.proofOfAuthorityName && (
+                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                              </svg>
+                              <div>
+                                <p className="text-sm font-medium text-blue-800">{formData.proofOfAuthorityName}</p>
+                                {formData.proofOfAuthoritySize && (
+                                  <p className="text-xs text-blue-600">{formatFileSize(formData.proofOfAuthoritySize)}</p>
+                                )}
+                                <p className="text-xs text-blue-500">Base64 encoded</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormDataList(prev => prev.map((form, i) => {
+                                  if (i === idx) {
+                                    return {
+                                      ...form,
+                                      proofOfAuthority: null,
+                                      proofOfAuthorityName: null,
+                                      proofOfAuthoritySize: null
+                                    };
+                                  }
+                                  return form;
+                                }));
+                              }}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="w-full mt-4 p-3 text-sm font-medium text-red-700 bg-red-50 rounded-md border border-red-200">
+            {error}
           </div>
-        ))}
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="w-full mt-4 p-3 text-sm font-medium text-red-700 bg-red-50 rounded-md border border-red-200">
-          {error}
-        </div>
-      )}
-
-      {/* Success Display */}
-      {success && (
-        <div className="w-full mt-4 p-3 text-sm font-medium text-green-700 bg-green-50 rounded-md border border-green-200">
-          {success}
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="w-full flex justify-end items-center gap-3 mt-6">
-        {formDataList.length < 5 && (
-          <button
-            type="button"
-            onClick={handleAddNew}
-            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
-          >
-            Add New
-          </button>
         )}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-        >
-          {isLoading ? 'Submitting...' : 'Submit'}
-        </button>
-      </div>
-    </form>
+
+        {/* Action Buttons */}
+        <div className="w-full flex justify-end items-center gap-3 mt-6">
+          {formDataList.length < 5 && (
+            <button
+              type="button"
+              onClick={handleAddNew}
+              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
+            >
+              Add New
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+          >
+            {isLoading ? 'Submitting...' : 'Submit'}
+          </button>
+        </div>
+      </form>
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full text-center shadow-xl">
+            <div className="mb-6">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Request Submitted Successfully!</h3>
+              <p className="text-sm text-gray-600">
+                Your request is under verification. Approved documents will be sent once ready.
+              </p>
+            </div>
+            <button
+              onClick={handleGotIt}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

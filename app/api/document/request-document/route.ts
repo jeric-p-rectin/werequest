@@ -121,17 +121,76 @@ export async function POST(request: Request) {
       // Create document request record
       const documentRequest = {
         requestId,
-        requestedFor: request.requestedFor,
-        fullName: request.fullName,
+        requestorInformation: {
+          // Personal Information
+          firstName: getRequestorInformation.firstName,
+          middleName: getRequestorInformation.middleName,
+          lastName: getRequestorInformation.lastName,
+          extName: getRequestorInformation.extName,
+          fullName: getRequestorInformation.fullName,
+
+          // Birth Information
+          birthday: getRequestorInformation.birthday,
+          birthPlace: getRequestorInformation.birthPlace,
+          age: getRequestorInformation.age,
+
+          // Personal Details
+          gender: getRequestorInformation.gender,
+          civilStatus: getRequestorInformation.civilStatus,
+          nationality: getRequestorInformation.nationality,
+          religion: getRequestorInformation.religion,
+
+          // Contact Information
+          email: getRequestorInformation.email,
+          phoneNumber: getRequestorInformation.phoneNumber,
+
+          // Address
+          houseNo: getRequestorInformation.houseNo,
+          purok: getRequestorInformation.purok,
+
+          // Work and Status
+          workingStatus: getRequestorInformation.workingStatus,
+          sourceOfIncome: getRequestorInformation.sourceOfIncome,
+
+          // Additional Information
+          votingStatus: getRequestorInformation.votingStatus,
+          educationalAttainment: getRequestorInformation.educationalAttainment,
+
+          // Status Information
+          soloParent: getRequestorInformation.soloParent,
+          fourPsBeneficiary: getRequestorInformation.fourPsBeneficiary,
+          pwd: getRequestorInformation.pwd,
+          pwdType: getRequestorInformation.pwdType,
+
+          // System fields
+          role: getRequestorInformation.role,
+          _id: getRequestorInformation._id
+        },
         documentType: request.documentType,
         copies: request.copies,
         purpose: request.purpose,
         proofOfAuthority: request.proofOfAuthority || null,
         proofOfAuthorityName: request.proofOfAuthorityName || null,
         proofOfAuthoritySize: request.proofOfAuthoritySize || null,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        requestDate: date,
+        decline: {
+          status: false,
+          reason: null,
+          declinedBy: null,
+          declinedAt: null
+        },
+        verify: {
+          status: false,
+          verifiedBy: null,
+          verifiedAt: null,
+        },
+        approved: {
+          status: false,
+          approvedBy: null,
+          approvedAt: null,
+        },
+        createdAt: date,
+        updatedAt: date
       };
 
       // Insert into database

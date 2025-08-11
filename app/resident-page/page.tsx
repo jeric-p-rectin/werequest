@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { FaBell, FaUser } from 'react-icons/fa';
+import { FaBell, FaUser, FaHome, FaBullhorn, FaFileAlt } from 'react-icons/fa';
 import ViewRequestedDocuments from '../components/Document/ViewRequestedDocuments';
 import Profile from '../components/Profile';
 import RequestDocument from '../components/Document/RequestDocument';
@@ -78,21 +78,21 @@ export default function HomePage() {
             onClick={() => setActiveSection('home')}
             type="button"
           >
-            <i className="bi bi-house-fill text-lg"></i> Home
+            <FaHome className="text-lg" /> Home
           </button>
           <button
             className={`nav mnav flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${activeSection === 'announcement' ? 'bg-white/20 text-white font-bold active' : 'text-white hover:bg-white/15'}`}
             onClick={() => setActiveSection('announcement')}
             type="button"
           >
-            <i className="bi bi-megaphone-fill text-lg"></i> Announcement
+            <FaBullhorn className="text-lg" /> Announcement
           </button>
           <button
             className={`nav mnav flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${activeSection === 'request' ? 'bg-white/20 text-white font-bold active' : 'text-white hover:bg-white/15'}`}
             onClick={() => setActiveSection('request')}
             type="button"
           >
-            <i className="bi bi-file-earmark-text-fill text-lg"></i> Request
+            <FaFileAlt className="text-lg" /> Request
           </button>
         </nav>
         {/* Right: Notification and Profile */}
