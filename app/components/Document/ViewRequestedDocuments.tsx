@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { FaCheck, FaTimes, FaClock, FaFolder, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import Image from 'next/image';
+import { FaCheck, FaTimes, FaClock, FaFolder, FaChevronDown, FaChevronRight, FaEye } from 'react-icons/fa';
 
 interface DocumentRequest {
   _id: string;
@@ -78,6 +79,8 @@ export default function ViewRequestedDocuments() {
   const [folderGroups, setFolderGroups] = useState<FolderGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentRequest | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -233,8 +236,116 @@ export default function ViewRequestedDocuments() {
     return 'Pending';
   };
 
+  const getDocumentImage = (documentType: string) => {
+    const docType = documentType.toLowerCase();
+    if (docType.includes('barangay clearance')) {
+      return '/images/clearance.jpg';
+    } else if (docType.includes('residency')) {
+      return '/images/residency.jpg';
+    } else if (docType.includes('business')) {
+      return '/images/business.jpg';
+    } else if (docType.includes('indigency')) {
+      return '/images/indigency.jpg';
+    } else if (docType.includes('certificate') && docType.includes('barc')) {
+      return '/images/clearance.jpg';
+    }
+    return '/images/clearance.jpg';
+  };
+
+  const handleViewClick = (doc: DocumentRequest) => {
+    setSelectedDoc(doc);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedDoc(null);
+  };
+
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-2 sm:p-4 lg:p-6 relative">
+      {/* Modal */}
+      {isModalOpen && selectedDoc && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-end p-2">
+              <button 
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 pb-6">
+              {selectedDoc.decline.status ? (
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <FaTimes className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h3 className="mt-3 text-lg font-medium text-gray-900">Request Declined</h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      We&lsquo;re sorry to inform you that your request has been declined due to an issue with your records. 
+                      For more details, please contact 0956-300-7758 for direct assistance. Thank you.
+                    </p>
+                  </div>
+                </div>
+              ) : selectedDoc.approved.status ? (
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                    <FaCheck className="h-6 w-6 text-green-600" />
+                  </div>
+                  <h3 className="mt-3 text-lg font-medium text-gray-900">Document Ready</h3>
+                  <div className="mt-4">
+                    <div className="relative h-64 w-full">
+                      <Image
+                        src={getDocumentImage(selectedDoc.documentType)}
+                        alt={selectedDoc.documentType}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Your {selectedDoc.documentType.toLowerCase()} is ready for download.
+                    </p>
+                  </div>
+                </div>
+              ) : selectedDoc.verify.status ? (
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <FaCheck className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="mt-3 text-lg font-medium text-gray-900">Under Review</h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Your request is being reviewed by our staff. Please wait for approval.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                    <FaClock className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <h3 className="mt-3 text-lg font-medium text-gray-900">Verification in Progress</h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Your request is still in the verification process. We&lsquo;re working to complete it as quickly as possible. 
+                      Thank you for your patience.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-3 sm:p-4 lg:p-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">My Requested Documents</h2>
@@ -307,6 +418,15 @@ export default function ViewRequestedDocuments() {
                                   </span>
                                 </div>
                               </div>
+                              <div className="flex justify-end pt-2">
+                                <button
+                                  onClick={() => handleViewClick(doc)}
+                                  className="text-blue-600 hover:text-blue-900 flex items-center space-x-1 text-sm font-medium"
+                                >
+                                  <FaEye className="w-4 h-4" />
+                                  <span>View Details</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -333,6 +453,9 @@ export default function ViewRequestedDocuments() {
                             </th>
                             <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Status
+                            </th>
+                            <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
                             </th>
                           </tr>
                         </thead>
@@ -361,6 +484,15 @@ export default function ViewRequestedDocuments() {
                                     {getStatusText(doc)}
                                   </span>
                                 </div>
+                              </td>
+                              <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button
+                                  onClick={() => handleViewClick(doc)}
+                                  className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
+                                >
+                                  <FaEye className="w-4 h-4" />
+                                  <span className="hidden sm:inline">View</span>
+                                </button>
                               </td>
                             </tr>
                           ))}

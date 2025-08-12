@@ -6,11 +6,37 @@ import { ObjectId } from 'mongodb';
 import { hash } from 'bcrypt';
 
 interface UpdateFields {
+  // Account
+  username?: string;
   email: string;
-  phoneNumber?: string;
-  civilStatus?: string;
-  workingStatus?: string;
   password?: string;
+  
+  // Personal Information
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  extName?: string;
+  fullName?: string;
+  birthday?: string;
+  birthPlace?: string;
+  age?: number;
+  gender?: string;
+  civilStatus?: string;
+  nationality?: string;
+  religion?: string;
+  
+  // Contact & Address
+  phoneNumber?: string;
+  houseNo?: string;
+  purok?: string;
+  
+  // Work & Status
+  workingStatus?: string;
+  sourceOfIncome?: string;
+  votingStatus?: string;
+  educationalAttainment?: string;
+  
+  // System
   updatedAt: Date;
 }
 
@@ -27,22 +53,44 @@ export async function PUT(request: Request) {
 
     const data = await request.json();
     
-    // Determine allowed fields based on role
     const isAdmin = session.user.role === 'admin' || session.user.role === 'super admin';
     const updateFields: UpdateFields = {
+      // Account
+      username: data.username,
       email: data.email,
+      
+      // Personal Information
+      firstName: data.firstName,
+      middleName: data.middleName,
+      lastName: data.lastName,
+      extName: data.extName,
+      fullName: data.fullName || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+      birthday: data.birthday,
+      birthPlace: data.birthPlace,
+      age: data.age,
+      gender: data.gender,
+      civilStatus: data.civilStatus,
+      nationality: data.nationality || 'Filipino',
+      religion: data.religion,
+      
+      // Contact & Address
+      phoneNumber: data.phoneNumber,
+      houseNo: data.houseNo,
+      purok: data.purok,
+      
+      // Work & Status
+      workingStatus: data.workingStatus,
+      sourceOfIncome: data.sourceOfIncome,
+      votingStatus: data.votingStatus,
+      educationalAttainment: data.educationalAttainment,
+      
+      // System
       updatedAt: new Date()
     };
-    if (isAdmin) {
-      // Admins can update password
-      if (data.password) {
-        updateFields.password = await hash(data.password, 10);
-      }
-    } else {
-      // Residents can update phoneNumber, civilStatus, workingStatus
-      updateFields.phoneNumber = data.phoneNumber;
-      updateFields.civilStatus = data.civilStatus;
-      updateFields.workingStatus = data.workingStatus;
+
+    // Only hash password if it's being updated (for admin users only)
+    if (isAdmin && data.password) {
+      updateFields.password = await hash(data.password, 10);
     }
 
     const client = await clientPromise;
