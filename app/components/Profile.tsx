@@ -324,7 +324,7 @@ export default function Profile() {
     };
 
     if (isAdminUser && editable.password) {
-      (payload as any).password = editable.password;
+      payload.password = editable.password;
     }
 
     const res = await fetch('/api/profile/edit-profile', {
