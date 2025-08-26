@@ -491,7 +491,7 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Filters (UI only) */}
-      <div className="flex flex-column gap-2 items-center mb-2">
+      <div className="flex flex-wrap gap-2 items-center mb-2">
         <select className="border rounded px-2 py-1 text-gray-900" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
           <option value="All">By Date (Quick)</option>
           <option value="Today">Today</option>
