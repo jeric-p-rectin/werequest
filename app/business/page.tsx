@@ -139,11 +139,12 @@ export default function BusinessPage() {
   };
 
   // open permit modal (shows image and allows download)
-  const handleOpenPermit = () => {
-    // currently show static image; change if you want per-business images
-    setPermitSrc('/images/business.jpg');
-    setShowPermit(true);
-  };
+const handleOpenPermit = (biz?: Business) => {
+  // Use business-specific image if available, otherwise default
+  // e.g., if you later add a permit URL on the business object: biz?.permitUrl && setPermitSrc(biz.permitUrl)
+  setPermitSrc('/images/business.jpg');
+  setShowPermit(true);
+};
 
   // update business
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -244,7 +245,7 @@ export default function BusinessPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-center flex gap-2 justify-center">
                         <button onClick={() => handleOpenPermit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFile /> Permit</button>
                         <button onClick={() => handleOpenEdit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaEdit /> Edit</button>
-                        <button onClick={() => setShowDelete(id)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFlag /> Claim</button>
+                        <button onClick={() => setShowDelete(id ?? null)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFlag /> Claim</button>
                       </td>
                     </tr>
                   );
