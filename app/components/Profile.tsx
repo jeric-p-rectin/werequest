@@ -3,7 +3,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { FaUserCircle } from "react-icons/fa";
+import { FaUserCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 
 /**
  * Full frontend-only Profile component:
@@ -82,6 +82,11 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [editable, setEditable] = useState<EditableFields>({
     email: "",
@@ -108,9 +113,6 @@ export default function Profile() {
     password: "",
     confirmPassword: ""
   });
-
-  const [showConfirm, setShowConfirm] = useState(false);
-  const formRef = useRef<HTMLFormElement | null>(null);
 
   const openConfirm = (e?: React.SyntheticEvent) => {
     e?.preventDefault();
@@ -449,22 +451,45 @@ export default function Profile() {
               {isAdminUser && (
                 <div>
                   <label className="block text-sm text-black">New Password</label>
-                  <input
-                    name="password"
-                    type="password"
-                    value={editable.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    placeholder="Leave blank to keep current password"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-black"
-                  />
-                  <input
-                    name="confirmPassword"
-                    type="password"
-                    value={editable.confirmPassword}
-                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                    placeholder="Confirm new password"
-                    className="mt-2 block w-full text-black rounded-md border-gray-300 shadow-sm"
-                  />
+                  <div className="relative mt-1">
+                    <input
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={editable.password}
+                      onChange={(e) => handleChange("password", e.target.value)}
+                      placeholder="Leave blank to keep current password"
+                      className="block w-full rounded-md border-gray-300 shadow-sm pr-10 text-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(s => !s)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+
+                  <label className="block text-sm text-black mt-2">Confirm Password</label>
+                  <div className="relative mt-1">
+                    <input
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={editable.confirmPassword}
+                      onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                      placeholder="Confirm new password"
+                      className="block w-full rounded-md border-gray-300 shadow-sm pr-10 text-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(s => !s)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+
                   {validationErrors.password && <p className="text-red-500 text-sm mt-1">{validationErrors.password}</p>}
                 </div>
               )}
