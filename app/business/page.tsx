@@ -144,6 +144,7 @@ const handleOpenPermit = (biz?: Business) => {
   // e.g., if you later add a permit URL on the business object: biz?.permitUrl && setPermitSrc(biz.permitUrl)
   setPermitSrc('/images/business.jpg');
   setShowPermit(true);
+  console.log(biz)
 };
 
   // update business
