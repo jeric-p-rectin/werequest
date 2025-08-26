@@ -240,7 +240,7 @@ export default function BusinessPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.businessName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.address}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.businessNature}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{new Date(b.dateEstablished).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.dateEstablished ? new Date(b.dateEstablished).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center flex gap-2 justify-center">
                         <button onClick={() => handleOpenPermit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFile /> Permit</button>
                         <button onClick={() => handleOpenEdit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaEdit /> Edit</button>
