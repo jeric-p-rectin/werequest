@@ -121,10 +121,22 @@ export default function Profile() {
     setShowConfirm(false);
     // submit the form if a ref is attached, otherwise try to submit the first form on the page
     if (formRef.current) {
-      (formRef.current as HTMLFormElement).requestSubmit?.() ?? (formRef.current as HTMLFormElement).submit();
-    } else {
-      const f = document.querySelector('form') as HTMLFormElement | null;
-      f?.requestSubmit?.() ?? f?.submit?.();
+      const frm = formRef.current as HTMLFormElement;
+      if (typeof frm.requestSubmit === "function") {
+        frm.requestSubmit();
+      } else {
+        frm.submit();
+      }
+      return;
+    }
+  
+    const f = document.querySelector('form') as HTMLFormElement | null;
+    if (f) {
+      if (typeof f.requestSubmit === "function") {
+        f.requestSubmit();
+      } else {
+        f.submit();
+      }
     }
   };
 

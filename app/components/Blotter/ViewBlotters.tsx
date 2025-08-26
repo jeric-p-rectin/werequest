@@ -6,8 +6,8 @@ import { FaEye, FaEdit } from 'react-icons/fa';
 interface Party {
   type: 'Resident' | 'Non-Resident';
   name: string;
-  residentId?: string;
-  residentInfo?: any;
+  residentId?: string | null;
+  residentInfo?: Resident;
   // UI-only fields for edit modal
   search?: string;
   showDropdown?: boolean;
@@ -29,10 +29,30 @@ interface Blotter {
 
 interface Resident {
   _id: string;
+  username?: string;
   firstName: string;
-  lastName: string;
   middleName?: string;
+  lastName: string;
+  extName?: string;
   fullName?: string;
+  birthday?: string;
+  birthPlace?: string;
+  age?: number;
+  gender?: string;
+  civilStatus?: string;
+  nationality?: string;
+  religion?: string;
+  email?: string;
+  password?: string;
+  phoneNumber?: string;
+  houseNo?: string;
+  purok?: string;
+  workingStatus?: string;
+  sourceOfIncome?: string;
+  votingStatus?: string;
+  educationalAttainment?: string;
+  soloParent?: boolean;
+  fourPsBeneficiary?: boolean;
 }
 
 // Nature of Complaint options
@@ -196,6 +216,12 @@ export default function ViewBlotters() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { _id: _, ...rawUpdate } = editForm;
 
+      type PartyPayload = {
+        type: Party['type'];
+        name: string;
+        residentId?: string | null | undefined;
+      };
+
       // Clean up UI-only fields from parties before sending
       const sanitizeParties = (parties?: Party[]) => {
         if (!Array.isArray(parties)) return parties;
@@ -206,7 +232,11 @@ export default function ViewBlotters() {
         }));
       };
 
-      const updateData: any = { ...rawUpdate };
+      const updateData: Partial<Omit<Blotter, '_id'>> & {
+        complainants?: PartyPayload[];
+        respondents?: PartyPayload[];
+      } = { ...(rawUpdate as Partial<Blotter>) };
+
       if (rawUpdate.complainants) updateData.complainants = sanitizeParties(rawUpdate.complainants as Party[]);
       if (rawUpdate.respondents) updateData.respondents = sanitizeParties(rawUpdate.respondents as Party[]);
 
@@ -238,14 +268,26 @@ export default function ViewBlotters() {
   };
 
   // Helpers to safely read party names (supports legacy shape too)
-  const getPartyNames = (blotter: any, side: 'complainants' | 'respondents') => {
+  const getPartyNames = (blotter: Partial<Blotter> | Record<string, unknown>, side: 'complainants' | 'respondents') => {
     if (!blotter) return '';
-    if (Array.isArray(blotter[side]) && blotter[side].length > 0) {
-      return blotter[side].map((p: any) => p?.name || (p?.residentInfo?.fullName ?? '')).filter(Boolean).join(', ');
+  
+    const sideVal = (blotter as Record<string, unknown>)[side];
+    if (Array.isArray(sideVal) && sideVal.length > 0) {
+      const arr = sideVal as Array<Partial<Party> & { residentInfo?: Partial<Resident> }>;
+      return arr
+        .map(p => p?.name ?? p?.residentInfo?.fullName ?? '')
+        .filter(Boolean)
+        .join(', ');
     }
+  
     // legacy fallback
-    if (side === 'complainants' && blotter.complainantInfo?.fullName) return blotter.complainantInfo.fullName;
-    if (side === 'respondents' && blotter.respondentInfo?.fullName) return blotter.respondentInfo.fullName;
+    if (side === 'complainants' && (blotter as Partial<Blotter>).complainantInfo?.fullName) {
+      return (blotter as Partial<Blotter>).complainantInfo!.fullName;
+    }
+    if (side === 'respondents' && (blotter as Partial<Blotter>).respondentInfo?.fullName) {
+      return (blotter as Partial<Blotter>).respondentInfo!.fullName;
+    }
+  
     return '';
   };
 

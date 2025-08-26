@@ -36,7 +36,7 @@ interface Party {
   type: 'Resident' | 'Non-Resident';
   name: string;
   residentId?: string;
-  residentInfo?: any;
+  residentInfo?: Partial<UserInfo> | Record<string, unknown>;
 }
 
 interface BlotterData {
@@ -98,21 +98,21 @@ export default function BlotterDashboard() {
   }, []);
 
   // Helper: read field (age, purok, gender, etc.) from complainants/respondents with fallback to legacy fields
-  const getComplainantField = (b: any, field: string) => {
+  const getComplainantField = (b: BlotterData | undefined, field: keyof UserInfo): unknown => {
     if (!b) return undefined;
     if (Array.isArray(b.complainants) && b.complainants.length > 0) {
       // prefer residentInfo if available
-      const residentParty = b.complainants.find((p: any) => p.type === 'Resident' && p.residentInfo) || b.complainants[0];
-      return residentParty?.residentInfo?.[field] ?? residentParty?.[field];
+      const residentParty = b.complainants.find((p) => p.type === 'Resident' && p.residentInfo) || b.complainants[0];
+      return residentParty?.residentInfo?.[field] ?? (residentParty as unknown as Record<string, unknown>)[field as string];
     }
     return b.complainantInfo?.[field];
   };
-
-  const getRespondentField = (b: any, field: string) => {
+  
+  const getRespondentField = (b: BlotterData | undefined, field: keyof UserInfo): unknown => {
     if (!b) return undefined;
     if (Array.isArray(b.respondents) && b.respondents.length > 0) {
-      const residentParty = b.respondents.find((p: any) => p.type === 'Resident' && p.residentInfo) || b.respondents[0];
-      return residentParty?.residentInfo?.[field] ?? residentParty?.[field];
+      const residentParty = b.respondents.find((p) => p.type === 'Resident' && p.residentInfo) || b.respondents[0];
+      return residentParty?.residentInfo?.[field] ?? (residentParty as unknown as Record<string, unknown>)[field as string];
     }
     return b.respondentInfo?.[field];
   };

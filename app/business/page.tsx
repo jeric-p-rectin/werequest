@@ -6,16 +6,6 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 
-type Business = {
-  _id?: string | { toString?: () => string };
-  id?: string;
-  ownerName?: string;
-  businessName?: string;
-  address?: string;
-  businessNature?: string;
-  dateEstablished?: string;
-};
-
 export default function BusinessPage() {
   const { data: session, status } = useSession();
 
@@ -24,7 +14,7 @@ export default function BusinessPage() {
 
   const [search, setSearch] = useState('');
   const [showNew, setShowNew] = useState(false);
-  const [showEdit, setShowEdit] = useState<string | null>(null);
+  const [showEdit, setShowEdit] = useState<any>(null);
   const [showDelete, setShowDelete] = useState<string | null>(null);
 
   // permit modal
@@ -32,7 +22,7 @@ export default function BusinessPage() {
   const [permitSrc, setPermitSrc] = useState('');
 
   // businesses state
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [loadingBiz, setLoadingBiz] = useState(true);
 
   // form states
@@ -57,7 +47,6 @@ export default function BusinessPage() {
         notifRef.current && !notifRef.current.contains(e.target as Node) &&
         profileRef.current && !profileRef.current.contains(e.target as Node)
       ) {
-        // noop for now
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -96,7 +85,7 @@ export default function BusinessPage() {
     (b.address && b.address.toLowerCase().includes(search.toLowerCase())) ||
     (b.businessNature && b.businessNature.toLowerCase().includes(search.toLowerCase()))
   );
-
+  
   // add new business
   const handleNewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,18 +118,18 @@ export default function BusinessPage() {
   };
 
   // open edit modal
-  const handleOpenEdit = (biz: Business) => {
+  const handleOpenEdit = (biz: any) => {
     const id = typeof biz._id === 'string' ? biz._id : biz._id?.toString?.() || biz.id;
-    setShowEdit(id || null);
-    setEditOwner(biz.ownerName || '');
-    setEditBiz(biz.businessName || '');
-    setEditAddr(biz.address || '');
-    setEditNature(biz.businessNature || '');
-    setEditEstablished(biz.dateEstablished?.slice(0, 10) || '');
+    setShowEdit(id);
+    setEditOwner(biz.ownerName);
+    setEditBiz(biz.businessName);
+    setEditAddr(biz.address);
+    setEditNature(biz.businessNature);
+    setEditEstablished(biz.dateEstablished?.slice(0, 10)); // format yyyy-mm-dd
   };
 
   // open permit modal (shows image and allows download)
-  const handleOpenPermit = (_biz: Business) => {
+  const handleOpenPermit = () => {
     // currently show static image; change if you want per-business images
     setPermitSrc('/images/business.jpg');
     setShowPermit(true);
@@ -241,7 +230,7 @@ export default function BusinessPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.businessName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.address}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.businessNature}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{new Date(b.dateEstablished || '').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{new Date(b.dateEstablished).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center flex gap-2 justify-center">
                         <button onClick={() => handleOpenPermit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFile /> Permit</button>
                         <button onClick={() => handleOpenEdit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaEdit /> Edit</button>
