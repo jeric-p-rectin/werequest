@@ -117,23 +117,23 @@ export default function ViewBlotters() {
   };
 
   // Normalize blotter parties for editing (fallback to legacy fields)
-  const normalizeBlotterForEdit = (blotter: Blotter): Blotter => {
-    const complainants =
-      Array.isArray(blotter.complainants) && blotter.complainants.length > 0
-        ? blotter.complainants.map(p => ({ ...p, search: p.name || '', showDropdown: false }))
-        : blotter.complainantInfo
-        ? [{ type: 'Resident', name: blotter.complainantInfo.fullName, residentId: undefined, search: blotter.complainantInfo.fullName, showDropdown: false }]
-        : [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }];
+const normalizeBlotterForEdit = (blotter: Blotter): Blotter => {
+	const complainants: Party[] =
+		Array.isArray(blotter.complainants) && blotter.complainants.length > 0
+			? (blotter.complainants.map(p => ({ ...p, search: p.name || '', showDropdown: false })) as Party[])
+			: blotter.complainantInfo
+			? [{ type: 'Resident', name: blotter.complainantInfo.fullName, residentId: undefined, search: blotter.complainantInfo.fullName, showDropdown: false }]
+			: [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }];
 
-    const respondents =
-      Array.isArray(blotter.respondents) && blotter.respondents.length > 0
-        ? blotter.respondents.map(p => ({ ...p, search: p.name || '', showDropdown: false }))
-        : blotter.respondentInfo
-        ? [{ type: 'Resident', name: blotter.respondentInfo.fullName, residentId: undefined, search: blotter.respondentInfo.fullName, showDropdown: false }]
-        : [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }];
+	const respondents: Party[] =
+		Array.isArray(blotter.respondents) && blotter.respondents.length > 0
+			? (blotter.respondents.map(p => ({ ...p, search: p.name || '', showDropdown: false })) as Party[])
+			: blotter.respondentInfo
+			? [{ type: 'Resident', name: blotter.respondentInfo.fullName, residentId: undefined, search: blotter.respondentInfo.fullName, showDropdown: false }]
+			: [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }];
 
-    return { ...blotter, complainants, respondents };
-  };
+	return { ...blotter, complainants, respondents };
+};
 
   const handleView = (blotter: Blotter) => {
     const normalized = normalizeBlotterForEdit(blotter);

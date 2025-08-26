@@ -196,7 +196,10 @@ export default function BlotterDashboard() {
   const topAgesMap: Record<string, number> = {};
   filteredBlotters.forEach(b => {
     const age = getComplainantField(b, 'age');
-    if (age) topAgesMap[age] = (topAgesMap[age] || 0) + 1;
+    if (age !== undefined && age !== null) {
+      const key = typeof age === 'number' ? String(age) : (typeof age === 'string' ? age : JSON.stringify(age));
+      topAgesMap[key] = (topAgesMap[key] || 0) + 1;
+    }
   });
   const topAges = Object.entries(topAgesMap).sort((a,b) => b[1]-a[1]).slice(0,3).map(([age]) => `${age} years old`);
 
@@ -204,7 +207,9 @@ export default function BlotterDashboard() {
   puroks.forEach(purok => { topPuroksMap[purok] = 0; });
   filteredBlotters.forEach(b => {
     const purok = getComplainantField(b, 'purok');
-    if (purok && topPuroksMap[purok] !== undefined) topPuroksMap[purok]++;
+    if (typeof purok === 'string' && topPuroksMap[purok] !== undefined) {
+      topPuroksMap[purok]++;
+    }
   });
   const topPuroks = Object.entries(topPuroksMap)
     .sort((a, b) => b[1] - a[1])
