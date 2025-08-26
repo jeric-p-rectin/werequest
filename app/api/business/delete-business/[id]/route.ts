@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id?: string } }
+  { params }: { params: { id: string } }
 ) {
   const id = params?.id;
   if (!id) {
