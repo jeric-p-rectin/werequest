@@ -30,7 +30,16 @@ export default function ViewDocuments() {
       const response = await fetch('/api/document/get-all-documents');
       if (!response.ok) throw new Error('Failed to fetch documents');
       const data = await response.json();
-      setDocuments(data.data);
+
+      // Ensure we have an array and sort by requestDate descending (most recent first)
+      const docs: RequestedDocument[] = Array.isArray(data.data) ? data.data : [];
+      const sorted = docs.slice().sort((a, b) => {
+        const da = new Date(a.requestDate).getTime();
+        const db = new Date(b.requestDate).getTime();
+        return db - da;
+      });
+
+      setDocuments(sorted);
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -194,7 +203,7 @@ export default function ViewDocuments() {
 
       {/* View Document Modal */}
       {showModal && selectedDocument && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">

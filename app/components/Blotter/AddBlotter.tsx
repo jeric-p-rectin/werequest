@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Resident {
   _id: string;
@@ -10,18 +11,29 @@ interface Resident {
   fullName?: string;
 }
 
+type PartyType = 'Resident' | 'Non-Resident';
+
+interface Party {
+  type: PartyType;
+  name: string;
+  residentId?: string | null;
+  // UI-only fields
+  search?: string;
+  showDropdown?: boolean;
+}
+
 interface BlotterForm {
   caseNo: string;
-  complainant: string;
-  respondent: string;
+  complainants: Party[];
+  respondents: Party[];
   complaint: string;
   natureOfComplaint: string;
 }
 
 const initialFormState: BlotterForm = {
   caseNo: '',
-  complainant: '',
-  respondent: '',
+  complainants: [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }],
+  respondents: [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }],
   complaint: '',
   natureOfComplaint: ''
 };
@@ -47,6 +59,7 @@ export default function AddBlotter() {
   const [success, setSuccess] = useState(false);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchResidents();
@@ -56,13 +69,15 @@ export default function AddBlotter() {
     try {
       const response = await fetch('/api/resident/get-all-residents');
       if (!response.ok) throw new Error('Failed to fetch residents');
-      
+
       const data = await response.json();
       const formattedResidents = data.data.map((resident: Resident) => ({
         ...resident,
-        fullName: resident.fullName || `${resident.firstName} ${resident.middleName ? resident.middleName + ' ' : ''}${resident.lastName}`
+        fullName:
+          resident.fullName ||
+          `${resident.firstName} ${resident.middleName ? resident.middleName + ' ' : ''}${resident.lastName}`
       }));
-      
+
       setResidents(formattedResidents);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch residents');
@@ -70,46 +85,8 @@ export default function AddBlotter() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Validate that complainant and respondent are different
-      if (formData.complainant === formData.respondent) {
-        throw new Error('Complainant and respondent cannot be the same person');
-      }
-
-      const response = await fetch('/api/blotter/add-blotter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit blotter');
-      }
-
-      // Reset form and show success message
-      setFormData(initialFormState);
-      setSuccess(true);
-      
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(false);
-      }, 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit blotter');
-      console.error('Error submitting blotter:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const filterResidents = (query: string) =>
+    residents.filter(r => (r.fullName || '').toLowerCase().includes(query.toLowerCase()));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -119,17 +96,123 @@ export default function AddBlotter() {
     }));
   };
 
+  // Party helpers
+  const addParty = (side: 'complainants' | 'respondents') => {
+    setFormData(prev => ({
+      ...prev,
+      [side]: [...prev[side], { type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }]
+    }));
+  };
+
+  const removeParty = (side: 'complainants' | 'respondents', index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      [side]: prev[side].filter((_, i) => i !== index)
+    }));
+  };
+
+  const updatePartyField = (
+    side: 'complainants' | 'respondents',
+    index: number,
+    changes: Partial<Party>
+  ) => {
+    setFormData(prev => {
+      const updated = prev[side].map((p, i) => (i === index ? { ...p, ...changes } : p));
+      return { ...prev, [side]: updated } as BlotterForm;
+    });
+  };
+
+  const handlePartyTypeChange = (side: 'complainants' | 'respondents', index: number, type: PartyType) => {
+    // switching type should clear residentId/search if Non-Resident
+    if (type === 'Non-Resident') {
+      updatePartyField(side, index, { type, residentId: null, search: '', showDropdown: false, name: '' });
+    } else {
+      updatePartyField(side, index, { type, residentId: null, search: '', showDropdown: false, name: '' });
+    }
+  };
+
+  const handlePartySearchChange = (side: 'complainants' | 'respondents', index: number, value: string) => {
+    updatePartyField(side, index, { search: value, showDropdown: true, name: value, residentId: null });
+  };
+
+  const selectResidentForParty = (side: 'complainants' | 'respondents', index: number, resident: Resident) => {
+    updatePartyField(side, index, {
+      name: resident.fullName || `${resident.firstName} ${resident.lastName}`,
+      residentId: resident._id,
+      search: resident.fullName || `${resident.firstName} ${resident.lastName}`,
+      showDropdown: false
+    });
+  };
+
+  const handleNonResidentNameChange = (side: 'complainants' | 'respondents', index: number, value: string) => {
+    updatePartyField(side, index, { name: value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Prepare payload: map parties to desired structure: { type, name, residentId? }
+      const payload = {
+        caseNo: formData.caseNo,
+        complainants: formData.complainants.map(p => ({
+          type: p.type,
+          name: p.name,
+          residentId: p.residentId ?? undefined
+        })),
+        respondents: formData.respondents.map(p => ({
+          type: p.type,
+          name: p.name,
+          residentId: p.residentId ?? undefined
+        })),
+        complaint: formData.complaint,
+        natureOfComplaint: formData.natureOfComplaint
+      };
+
+      const response = await fetch('/api/blotter/add-blotter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit blotter');
+      }
+
+      // console.log(payload);
+
+      // Reset form and show success message
+      setFormData(initialFormState);
+      setSuccess(true);
+
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
+      router.push("/blotter")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit blotter');
+      console.error('Error submitting blotter:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center p-6">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Report New Blotter</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Case No. Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Case No.
-            </label>
+            <label className="block text-sm font-medium text-black mb-2">Case No.</label>
             <input
               type="text"
               name="caseNo"
@@ -141,53 +224,169 @@ export default function AddBlotter() {
             />
           </div>
 
-          {/* Complainant Field */}
+          {/* Complainants - dynamic list */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Complainant
-            </label>
-            <select
-              name="complainant"
-              value={formData.complainant}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-            >
-              <option value="">Select complainant</option>
-              {residents.map((resident) => (
-                <option key={resident._id} value={resident.fullName}>
-                  {resident.fullName}
-                </option>
+            <label className="block text-sm font-medium text-black mb-2">Complainants</label>
+            <div className="space-y-3">
+              {formData.complainants.map((p, idx) => (
+                <div key={idx} className="p-3 border border-gray-200 rounded-md">
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={p.type}
+                      onChange={e => handlePartyTypeChange('complainants', idx, e.target.value as PartyType)}
+                      className="p-2 border text-black border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="Resident">Resident</option>
+                      <option value="Non-Resident">Non-Resident</option>
+                    </select>
+
+                    {p.type === 'Resident' ? (
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          placeholder="Search resident..."
+                          value={p.search ?? ''}
+                          onChange={e => handlePartySearchChange('complainants', idx, e.target.value)}
+                          onFocus={() => updatePartyField('complainants', idx, { showDropdown: true })}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                          autoComplete="off"
+                        />
+                        {p.showDropdown && (p.search ?? '') !== '' && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            {filterResidents(p.search ?? '').length > 0 ? (
+                              filterResidents(p.search ?? '').map(resident => (
+                                <button
+                                  key={resident._id}
+                                  type="button"
+                                  onClick={() => selectResidentForParty('complainants', idx, resident)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                                >
+                                  {resident.fullName}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-gray-500 text-sm">
+                                No residents found matching “{p.search}”
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Enter name..."
+                        value={p.name}
+                        onChange={e => handleNonResidentNameChange('complainants', idx, e.target.value)}
+                        className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => removeParty('complainants', idx)}
+                      className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
               ))}
-            </select>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => addParty('complainants')}
+                className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+              >
+                + Add Complainant
+              </button>
+            </div>
           </div>
 
-          {/* Respondent Field */}
+          {/* Respondents - dynamic list */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Respondent
-            </label>
-            <select
-              name="respondent"
-              value={formData.respondent}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-            >
-              <option value="">Select respondent</option>
-              {residents.map((resident) => (
-                <option key={resident._id} value={resident.fullName}>
-                  {resident.fullName}
-                </option>
+            <label className="block text-sm font-medium text-black mb-2">Respondents</label>
+            <div className="space-y-3">
+              {formData.respondents.map((p, idx) => (
+                <div key={idx} className="p-3 border border-gray-200 rounded-md">
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={p.type}
+                      onChange={e => handlePartyTypeChange('respondents', idx, e.target.value as PartyType)}
+                      className="p-2 border text-black border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="Resident">Resident</option>
+                      <option value="Non-Resident">Non-Resident</option>
+                    </select>
+
+                    {p.type === 'Resident' ? (
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          placeholder="Search resident..."
+                          value={p.search ?? ''}
+                          onChange={e => handlePartySearchChange('respondents', idx, e.target.value)}
+                          onFocus={() => updatePartyField('respondents', idx, { showDropdown: true })}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                          autoComplete="off"
+                        />
+                        {p.showDropdown && (p.search ?? '') !== '' && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            {filterResidents(p.search ?? '').length > 0 ? (
+                              filterResidents(p.search ?? '').map(resident => (
+                                <button
+                                  key={resident._id}
+                                  type="button"
+                                  onClick={() => selectResidentForParty('respondents', idx, resident)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                                >
+                                  {resident.fullName}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-gray-500 text-sm">
+                                No residents found matching “{p.search}”
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Enter name..."
+                        value={p.name}
+                        onChange={e => handleNonResidentNameChange('respondents', idx, e.target.value)}
+                        className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => removeParty('respondents', idx)}
+                      className="p-2 bg-green-600 text-white hover:bg-green-700 hover:text-white rounded-md"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
               ))}
-            </select>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => addParty('respondents')}
+                className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+              >
+                + Add Respondent
+              </button>
+            </div>
           </div>
 
           {/* Complaint Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Complaint
-            </label>
+            <label className="block text-sm font-medium text-black mb-2">Complaint</label>
             <textarea
               name="complaint"
               value={formData.complaint}
@@ -201,9 +400,7 @@ export default function AddBlotter() {
 
           {/* Nature of Complaint Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nature of Complaint
-            </label>
+            <label className="block text-sm font-medium text-black mb-2">Nature of Complaint</label>
             <select
               name="natureOfComplaint"
               value={formData.natureOfComplaint}
@@ -212,7 +409,7 @@ export default function AddBlotter() {
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
             >
               <option value="">Select nature of complaint</option>
-              {complaintNatures.map((nature) => (
+              {complaintNatures.map(nature => (
                 <option key={nature} value={nature}>
                   {nature}
                 </option>

@@ -32,13 +32,22 @@ interface UserInfo {
   role: string;
 }
 
+interface Party {
+  type: 'Resident' | 'Non-Resident';
+  name: string;
+  residentId?: string;
+  residentInfo?: any;
+}
+
 interface BlotterData {
   _id: string;
   caseNo: string;
   complaint: string;
   natureOfComplaint: string;
-  complainantInfo: UserInfo;
-  respondentInfo: UserInfo;
+  complainants?: Party[];
+  respondents?: Party[];
+  complainantInfo?: UserInfo;
+  respondentInfo?: UserInfo;
   status: string;
   createdAt: string;
 }
@@ -74,8 +83,8 @@ export default function BlotterDashboard() {
       try {
         const response = await fetch('/api/blotter/get-all-blotters');
         const result = await response.json();
-        if (result.success) {
-          setBlotters(result.data);
+        if (result.success || result.data) {
+          setBlotters(result.data || result);
         } else {
           setError('Failed to fetch blotter data');
         }
@@ -87,6 +96,26 @@ export default function BlotterDashboard() {
     };
     fetchBlotters();
   }, []);
+
+  // Helper: read field (age, purok, gender, etc.) from complainants/respondents with fallback to legacy fields
+  const getComplainantField = (b: any, field: string) => {
+    if (!b) return undefined;
+    if (Array.isArray(b.complainants) && b.complainants.length > 0) {
+      // prefer residentInfo if available
+      const residentParty = b.complainants.find((p: any) => p.type === 'Resident' && p.residentInfo) || b.complainants[0];
+      return residentParty?.residentInfo?.[field] ?? residentParty?.[field];
+    }
+    return b.complainantInfo?.[field];
+  };
+
+  const getRespondentField = (b: any, field: string) => {
+    if (!b) return undefined;
+    if (Array.isArray(b.respondents) && b.respondents.length > 0) {
+      const residentParty = b.respondents.find((p: any) => p.type === 'Resident' && p.residentInfo) || b.respondents[0];
+      return residentParty?.residentInfo?.[field] ?? residentParty?.[field];
+    }
+    return b.respondentInfo?.[field];
+  };
 
   if (loading) return <div className="text-gray-800">Loading blotter analytics...</div>;
   if (error) return <div className="text-red-600">Error: {error}</div>;
@@ -110,18 +139,18 @@ export default function BlotterDashboard() {
       }
     }
     const statusOk = !statusFilter || b.status.toLowerCase() === statusFilter.toLowerCase();
-    const purokOk = !purokFilter || b.complainantInfo?.purok === purokFilter;
+    const purokOk = !purokFilter || getComplainantField(b, 'purok') === purokFilter;
     const natureOk = !natureFilter || b.natureOfComplaint === natureFilter;
     return dateOk && statusOk && purokOk && natureOk;
   });
 
   // --- SUMMARY CARDS ---
   const total = filteredBlotters.length;
-  const pending = filteredBlotters.filter(b => b.status.toLowerCase() === 'pending').length;
+  const ongoing = filteredBlotters.filter(b => b.status.toLowerCase() === 'on-going').length;
   const settled = filteredBlotters.filter(b => b.status.toLowerCase() === 'settled').length;
   const endorsed = filteredBlotters.filter(b => b.status.toLowerCase() === 'endorsed').length;
   const summaryData = [
-    { label: 'Pending', value: pending, percent: total ? Math.round((pending/total)*100) : 0, icon: 'fa-arrow-up' },
+    { label: 'On-going', value: ongoing, percent: total ? Math.round((ongoing/total)*100) : 0, icon: 'fa-arrow-up' },
     { label: 'Settled', value: settled, percent: total ? Math.round((settled/total)*100) : 0, icon: 'fa-arrow-up' },
     { label: 'Endorsed', value: endorsed, percent: total ? Math.round((endorsed/total)*100) : 0, icon: 'fa-arrow-down' },
     { label: 'Total', value: total, percent: 100, icon: 'fa-plus' },
@@ -136,7 +165,7 @@ export default function BlotterDashboard() {
     const monthBlotters = filteredBlotters.filter(b => new Date(b.createdAt).getMonth() === idx);
     return {
       month: m,
-      Pending: monthBlotters.filter(b => b.status.toLowerCase() === 'pending').length,
+      'On-going': monthBlotters.filter(b => b.status.toLowerCase() === 'on-going').length,
       Settled: monthBlotters.filter(b => b.status.toLowerCase() === 'settled').length,
       Endorsed: monthBlotters.filter(b => b.status.toLowerCase() === 'endorsed').length,
     };
@@ -145,14 +174,13 @@ export default function BlotterDashboard() {
     const yearBlotters = filteredBlotters.filter(b => new Date(b.createdAt).getFullYear() === year);
     return {
       year: year.toString(),
-      Pending: yearBlotters.filter(b => b.status.toLowerCase() === 'pending').length,
+      'On-going': yearBlotters.filter(b => b.status.toLowerCase() === 'on-going').length,
       Settled: yearBlotters.filter(b => b.status.toLowerCase() === 'settled').length,
       Endorsed: yearBlotters.filter(b => b.status.toLowerCase() === 'endorsed').length,
     };
   });
 
   // --- TOP CASES, AGES, PUROKS, DAYS ---
-  // Use the provided natureOfComplaintOptions for topCases
   const natureCounts: Record<string, number> = {};
   natureOfComplaintOptions.forEach(nature => { natureCounts[nature] = 0; });
   filteredBlotters.forEach(b => {
@@ -167,16 +195,15 @@ export default function BlotterDashboard() {
 
   const topAgesMap: Record<string, number> = {};
   filteredBlotters.forEach(b => {
-    const age = b.complainantInfo?.age;
+    const age = getComplainantField(b, 'age');
     if (age) topAgesMap[age] = (topAgesMap[age] || 0) + 1;
   });
   const topAges = Object.entries(topAgesMap).sort((a,b) => b[1]-a[1]).slice(0,3).map(([age]) => `${age} years old`);
 
-  // For puroks, use the provided list
   const topPuroksMap: Record<string, number> = {};
   puroks.forEach(purok => { topPuroksMap[purok] = 0; });
   filteredBlotters.forEach(b => {
-    const purok = b.complainantInfo?.purok;
+    const purok = getComplainantField(b, 'purok');
     if (purok && topPuroksMap[purok] !== undefined) topPuroksMap[purok]++;
   });
   const topPuroks = Object.entries(topPuroksMap)
@@ -193,8 +220,8 @@ export default function BlotterDashboard() {
 
   // --- PER CATEGORY: CASES PER PUROK (THIS YEAR VS LAST YEAR) ---
   const purokBarData = puroks.map((purok, idx) => {
-    const thisYearCount = filteredBlotters.filter(b => b.complainantInfo?.purok === purok && new Date(b.createdAt).getFullYear() === thisYear).length;
-    const lastYearCount = filteredBlotters.filter(b => b.complainantInfo?.purok === purok && new Date(b.createdAt).getFullYear() === lastYear).length;
+    const thisYearCount = filteredBlotters.filter(b => getComplainantField(b, 'purok') === purok && new Date(b.createdAt).getFullYear() === thisYear).length;
+    const lastYearCount = filteredBlotters.filter(b => getComplainantField(b, 'purok') === purok && new Date(b.createdAt).getFullYear() === lastYear).length;
     const colors = ['#012815', '#145c3d', '#3d8c66', '#4f6a1b', '#5a8d38', '#267a4e', '#1f4027'];
     return {
       purok,
@@ -208,7 +235,7 @@ export default function BlotterDashboard() {
   // Complainants Involvement (gender)
   const genderMap: Record<string, number> = {};
   filteredBlotters.forEach(b => {
-    const gender = b.complainantInfo?.gender ? b.complainantInfo.gender.charAt(0).toUpperCase() + b.complainantInfo.gender.slice(1).toLowerCase() : 'Unknown';
+    const gender = getComplainantField(b, 'gender') ? String(getComplainantField(b, 'gender')).charAt(0).toUpperCase() + String(getComplainantField(b, 'gender')).slice(1).toLowerCase() : 'Unknown';
     genderMap[gender] = (genderMap[gender] || 0) + 1;
   });
   const pieData = Object.entries(genderMap).map(([name, value]) => ({ name, value }));
@@ -218,13 +245,13 @@ export default function BlotterDashboard() {
   const caseStatusData = [
     { name: 'Settled', thisYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'settled' && new Date(b.createdAt).getFullYear() === thisYear).length, lastYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'settled' && new Date(b.createdAt).getFullYear() === lastYear).length },
     { name: 'Endorsed', thisYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'endorsed' && new Date(b.createdAt).getFullYear() === thisYear).length, lastYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'endorsed' && new Date(b.createdAt).getFullYear() === lastYear).length },
-    { name: 'Pending', thisYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'pending' && new Date(b.createdAt).getFullYear() === thisYear).length, lastYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'pending' && new Date(b.createdAt).getFullYear() === lastYear).length },
+    { name: 'On-going', thisYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'on-going' && new Date(b.createdAt).getFullYear() === thisYear).length, lastYear: filteredBlotters.filter(b => b.status.toLowerCase() === 'on-going' && new Date(b.createdAt).getFullYear() === lastYear).length },
   ];
 
   // Respondents Involvement (gender)
   const respondentGenderMap: Record<string, number> = {};
   filteredBlotters.forEach(b => {
-    const gender = b.respondentInfo?.gender ? b.respondentInfo.gender.charAt(0).toUpperCase() + b.respondentInfo.gender.slice(1).toLowerCase() : 'Unknown';
+    const gender = getRespondentField(b, 'gender') ? String(getRespondentField(b, 'gender')).charAt(0).toUpperCase() + String(getRespondentField(b, 'gender')).slice(1).toLowerCase() : 'Unknown';
     respondentGenderMap[gender] = (respondentGenderMap[gender] || 0) + 1;
   });
   const respondentPieData = Object.entries(respondentGenderMap).map(([name, value]) => ({ name, value }));
@@ -256,7 +283,7 @@ export default function BlotterDashboard() {
           <input type="date" className="border rounded px-3 py-2 text-black" />
           <select className="border rounded px-3 py-2 text-black" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="">By Status</option>
-            <option value="Pending">Pending</option>
+            <option value="On-going">On-going</option>
             <option value="Settled">Settled</option>
             <option value="Endorsed">Endorsed</option>
           </select>
@@ -283,7 +310,7 @@ export default function BlotterDashboard() {
               <YAxis tick={{ fill: '#1F2937' }} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="Pending" fill="#012815" />
+              <Bar dataKey="On-going" fill="#012815" />
               <Bar dataKey="Settled" fill="#145c3d" />
               <Bar dataKey="Endorsed" fill="#3d8c66" />
             </BarChart>

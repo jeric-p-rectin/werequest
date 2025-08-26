@@ -1,7 +1,7 @@
 // app/components/Profile.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { FaUserCircle } from "react-icons/fa";
 
@@ -109,6 +109,27 @@ export default function Profile() {
     confirmPassword: ""
   });
 
+  const [showConfirm, setShowConfirm] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  const openConfirm = (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    setShowConfirm(true);
+  };
+
+  const confirmYes = () => {
+    setShowConfirm(false);
+    // submit the form if a ref is attached, otherwise try to submit the first form on the page
+    if (formRef.current) {
+      (formRef.current as HTMLFormElement).requestSubmit?.() ?? (formRef.current as HTMLFormElement).submit();
+    } else {
+      const f = document.querySelector('form') as HTMLFormElement | null;
+      f?.requestSubmit?.() ?? f?.submit?.();
+    }
+  };
+
+  const confirmNo = () => setShowConfirm(false);
+
   const [isEditing, setIsEditing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
@@ -185,56 +206,50 @@ export default function Profile() {
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
-
-    // Common required fields from your JSON schema
-    // personalInformation: firstName, lastName
-    if (!isAdminUser) {
-      if (!editable.firstName || editable.firstName.trim() === "") {
-        errors.firstName = "First name is required";
-      }
-      if (!editable.lastName || editable.lastName.trim() === "") {
-        errors.lastName = "Last name is required";
-      }
-
-      // birthInformation
-      if (!editable.birthday) {
-        errors.birthday = "Birthday is required";
-      } else if (!isAtLeast13YearsOld(editable.birthday)) {
-        errors.birthday = "User must be at least 13 years old";
-      }
-      if (!editable.birthPlace || editable.birthPlace.trim() === "") {
-        errors.birthPlace = "Birth place is required";
-      }
-
-      // personalDetails
-      if (!editable.gender) errors.gender = "Gender is required";
-      if (!editable.civilStatus) errors.civilStatus = "Civil status is required";
-      if (!editable.religion) errors.religion = "Religion is required";
-      if (!editable.nationality) errors.nationality = "Nationality is required";
-
-      // contactInformation
-      if (!editable.email) errors.email = "Email is required";
-      // simple email regex check
-      if (editable.email && !/^\S+@\S+\.\S+$/.test(editable.email)) {
-        errors.email = "Invalid email format";
-      }
-      if (!editable.phoneNumber) errors.phoneNumber = "Phone number is required";
-
-      // address
-      if (!editable.houseNo) errors.houseNo = "House number is required";
-      if (!editable.purok) errors.purok = "Purok is required";
-
-      // workAndStatus
-      if (!editable.workingStatus) errors.workingStatus = "Working status is required";
-
-      // additionalInformation
-      if (!editable.votingStatus) errors.votingStatus = "Voting status is required";
-      if (!editable.educationalAttainment) errors.educationalAttainment = "Educational attainment is required";
-
-      // password rules already handled below for admin
+  
+    // Common required fields (run for everyone now)
+    if (!editable.firstName || editable.firstName.trim() === "") {
+      errors.firstName = "First name is required";
     }
-
-    // Password rules for admin only
+    if (!editable.lastName || editable.lastName.trim() === "") {
+      errors.lastName = "Last name is required";
+    }
+  
+    // birthInformation
+    if (!editable.birthday) {
+      errors.birthday = "Birthday is required";
+    } else if (!isAtLeast13YearsOld(editable.birthday)) {
+      errors.birthday = "User must be at least 13 years old";
+    }
+    if (!editable.birthPlace || editable.birthPlace.trim() === "") {
+      errors.birthPlace = "Birth place is required";
+    }
+  
+    // personalDetails
+    if (!editable.gender) errors.gender = "Gender is required";
+    if (!editable.civilStatus) errors.civilStatus = "Civil status is required";
+    if (!editable.religion) errors.religion = "Religion is required";
+    if (!editable.nationality) errors.nationality = "Nationality is required";
+  
+    // contactInformation
+    if (!editable.email) errors.email = "Email is required";
+    if (editable.email && !/^\S+@\S+\.\S+$/.test(editable.email)) {
+      errors.email = "Invalid email format";
+    }
+    if (!editable.phoneNumber) errors.phoneNumber = "Phone number is required";
+  
+    // address
+    if (!editable.houseNo) errors.houseNo = "House number is required";
+    if (!editable.purok) errors.purok = "Purok is required";
+  
+    // workAndStatus
+    if (!editable.workingStatus) errors.workingStatus = "Working status is required";
+  
+    // additionalInformation
+    if (!editable.votingStatus) errors.votingStatus = "Voting status is required";
+    if (!editable.educationalAttainment) errors.educationalAttainment = "Educational attainment is required";
+  
+    // Password rules remain role-specific
     if (isAdminUser) {
       if (editable.password || editable.confirmPassword) {
         if (editable.password !== editable.confirmPassword) {
@@ -245,12 +260,11 @@ export default function Profile() {
         }
       }
     } else {
-      // residents cannot change password locally
       if (editable.password || editable.confirmPassword) {
         errors.password = "Residents cannot change password";
       }
     }
-
+  
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -402,7 +416,7 @@ export default function Profile() {
                   name="username"
                   value={editable.username}
                   onChange={(e) => handleChange("username", e.target.value)}
-                  disabled={!isEditing || isAdminUser === false ? false : !isEditing}
+                  disabled={!isEditing}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-black"
                 />
               </div>
@@ -437,7 +451,7 @@ export default function Profile() {
                     value={editable.confirmPassword}
                     onChange={(e) => handleChange("confirmPassword", e.target.value)}
                     placeholder="Confirm new password"
-                    className="mt-2 block w-full rounded-md border-gray-300 shadow-sm"
+                    className="mt-2 block w-full text-black rounded-md border-gray-300 shadow-sm"
                   />
                   {validationErrors.password && <p className="text-red-500 text-sm mt-1">{validationErrors.password}</p>}
                 </div>
@@ -446,7 +460,7 @@ export default function Profile() {
           </section>
 
           {/* PERSONAL INFO */}
-          {!isAdminUser && (
+          
             <section>
               <h2 className="text-lg text-black font-medium mb-3">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -483,7 +497,7 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm">Extension Name</label>
+                  <label className="block text-sm text-black">Extension Name</label>
                   <input
                     value={editable.extName}
                     onChange={(e) => handleChange("extName", e.target.value)}
@@ -586,10 +600,10 @@ export default function Profile() {
                 </div>
               </div>
             </section>
-          )}
+          
 
           {/* CONTACT & ADDRESS */}
-          {!isAdminUser && (
+          
             <section>
               <h2 className="text-lg text-black font-medium mb-3">Contact & Address</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -630,10 +644,10 @@ export default function Profile() {
                 </div>
               </div>
             </section>
-          )}
+          
 
           {/* WORK & ADDITIONAL */}
-          {!isAdminUser && (
+          
             <section>
               <h2 className="text-lg text-black font-medium mb-3">Work & Additional Info</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -690,7 +704,7 @@ export default function Profile() {
                 </div>
               </div>
             </section>
-          )}
+          
 
           {/* ACTIONS */}
           {isEditing ? (
@@ -703,7 +717,7 @@ export default function Profile() {
                 Cancel
               </button>
               <button
-                type="submit"
+                onClick={openConfirm}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Save Changes
@@ -718,6 +732,30 @@ export default function Profile() {
               >
                 Edit Profile
               </button>
+            </div>
+          )}
+
+          {showConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-white rounded p-6 w-full max-w-md">
+                <p className="text-lg text-black font-medium">Are you sure want to save the changes</p>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={confirmNo}
+                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                  >
+                    No
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmYes}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Yes
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </form>

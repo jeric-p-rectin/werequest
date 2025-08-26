@@ -3,18 +3,27 @@
 import { useState, useEffect } from 'react';
 import { FaEye, FaEdit } from 'react-icons/fa';
 
+interface Party {
+  type: 'Resident' | 'Non-Resident';
+  name: string;
+  residentId?: string;
+  residentInfo?: any;
+  // UI-only fields for edit modal
+  search?: string;
+  showDropdown?: boolean;
+}
+
 interface Blotter {
   _id: string;
   caseNo: string;
-  complainantInfo: {
-    fullName: string;
-  };
-  respondentInfo: {
-    fullName: string;
-  };
+  complainants?: Party[]; // new shape
+  respondents?: Party[];  // new shape
+  // legacy fallback fields (optional)
+  complainantInfo?: { fullName: string };
+  respondentInfo?: { fullName: string };
   complaint: string;
   natureOfComplaint: string;
-  status: 'pending' | 'settled' | 'declined';
+  status: 'pending' | 'on-going' | 'settled' | 'endorsed';
   createdAt: string;
 }
 
@@ -77,7 +86,9 @@ export default function ViewBlotters() {
       const data = await response.json();
       const formattedResidents = data.data.map((resident: Resident) => ({
         ...resident,
-        fullName: resident.fullName || `${resident.firstName} ${resident.middleName ? resident.middleName + ' ' : ''}${resident.lastName}`
+        fullName:
+          resident.fullName ||
+          `${resident.firstName} ${resident.middleName ? resident.middleName + ' ' : ''}${resident.lastName}`
       }));
       setResidents(formattedResidents);
     } catch (err) {
@@ -85,9 +96,29 @@ export default function ViewBlotters() {
     }
   };
 
+  // Normalize blotter parties for editing (fallback to legacy fields)
+  const normalizeBlotterForEdit = (blotter: Blotter): Blotter => {
+    const complainants =
+      Array.isArray(blotter.complainants) && blotter.complainants.length > 0
+        ? blotter.complainants.map(p => ({ ...p, search: p.name || '', showDropdown: false }))
+        : blotter.complainantInfo
+        ? [{ type: 'Resident', name: blotter.complainantInfo.fullName, residentId: undefined, search: blotter.complainantInfo.fullName, showDropdown: false }]
+        : [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }];
+
+    const respondents =
+      Array.isArray(blotter.respondents) && blotter.respondents.length > 0
+        ? blotter.respondents.map(p => ({ ...p, search: p.name || '', showDropdown: false }))
+        : blotter.respondentInfo
+        ? [{ type: 'Resident', name: blotter.respondentInfo.fullName, residentId: undefined, search: blotter.respondentInfo.fullName, showDropdown: false }]
+        : [{ type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }];
+
+    return { ...blotter, complainants, respondents };
+  };
+
   const handleView = (blotter: Blotter) => {
-    setSelectedBlotter(blotter);
-    setEditForm(blotter);
+    const normalized = normalizeBlotterForEdit(blotter);
+    setSelectedBlotter(normalized);
+    setEditForm(normalized);
     setIsEditing(false);
     setShowModal(true);
   };
@@ -104,13 +135,80 @@ export default function ViewBlotters() {
     }));
   };
 
+  // Party helpers (for edit modal)
+  const addParty = (side: 'complainants' | 'respondents') => {
+    setEditForm(prev => {
+      const current = (prev[side] as Party[]) || [];
+      return { ...prev, [side]: [...current, { type: 'Resident', name: '', residentId: null, search: '', showDropdown: false }] };
+    });
+  };
+
+  const removeParty = (side: 'complainants' | 'respondents', index: number) => {
+    setEditForm(prev => {
+      const current = (prev[side] as Party[]) || [];
+      return { ...prev, [side]: current.filter((_, i) => i !== index) };
+    });
+  };
+
+  const updatePartyField = (side: 'complainants' | 'respondents', index: number, changes: Partial<Party>) => {
+    setEditForm(prev => {
+      const current = (prev[side] as Party[]) || [];
+      const updated = current.map((p, i) => (i === index ? { ...p, ...changes } : p));
+      return { ...prev, [side]: updated };
+    });
+  };
+
+  const handlePartyTypeChange = (side: 'complainants' | 'respondents', index: number, type: 'Resident' | 'Non-Resident') => {
+    if (type === 'Non-Resident') {
+      updatePartyField(side, index, { type, residentId: null, search: '', showDropdown: false, name: '' });
+    } else {
+      updatePartyField(side, index, { type, residentId: null, search: '', showDropdown: false, name: '' });
+    }
+  };
+
+  const handlePartySearchChange = (side: 'complainants' | 'respondents', index: number, value: string) => {
+    updatePartyField(side, index, { search: value, showDropdown: true, name: value, residentId: null });
+  };
+
+  const selectResidentForParty = (side: 'complainants' | 'respondents', index: number, resident: Resident) => {
+    updatePartyField(side, index, {
+      name: resident.fullName || `${resident.firstName} ${resident.lastName}`,
+      residentId: resident._id,
+      search: resident.fullName || `${resident.firstName} ${resident.lastName}`,
+      showDropdown: false,
+      residentInfo: resident
+    });
+  };
+
+  const handleNonResidentNameChange = (side: 'complainants' | 'respondents', index: number, value: string) => {
+    updatePartyField(side, index, { name: value });
+  };
+
+  // Filtering helper
+  const filterResidents = (query: string) =>
+    residents.filter(r => (r.fullName || '').toLowerCase().includes(query.toLowerCase()));
+
   const handleSaveChanges = async () => {
     if (!selectedBlotter?._id) return;
 
     try {
-      // Remove _id from editForm
+      // Prepare updateData from editForm
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { _id: _, ...updateData } = editForm;
+      const { _id: _, ...rawUpdate } = editForm;
+
+      // Clean up UI-only fields from parties before sending
+      const sanitizeParties = (parties?: Party[]) => {
+        if (!Array.isArray(parties)) return parties;
+        return parties.map(p => ({
+          type: p.type,
+          name: p.name,
+          residentId: p.residentId ?? undefined
+        }));
+      };
+
+      const updateData: any = { ...rawUpdate };
+      if (rawUpdate.complainants) updateData.complainants = sanitizeParties(rawUpdate.complainants as Party[]);
+      if (rawUpdate.respondents) updateData.respondents = sanitizeParties(rawUpdate.respondents as Party[]);
 
       const response = await fetch(`/api/blotter/update/${selectedBlotter._id}`, {
         method: 'PUT',
@@ -139,6 +237,18 @@ export default function ViewBlotters() {
     }
   };
 
+  // Helpers to safely read party names (supports legacy shape too)
+  const getPartyNames = (blotter: any, side: 'complainants' | 'respondents') => {
+    if (!blotter) return '';
+    if (Array.isArray(blotter[side]) && blotter[side].length > 0) {
+      return blotter[side].map((p: any) => p?.name || (p?.residentInfo?.fullName ?? '')).filter(Boolean).join(', ');
+    }
+    // legacy fallback
+    if (side === 'complainants' && blotter.complainantInfo?.fullName) return blotter.complainantInfo.fullName;
+    if (side === 'respondents' && blotter.respondentInfo?.fullName) return blotter.respondentInfo.fullName;
+    return '';
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -159,8 +269,8 @@ export default function ViewBlotters() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Case No.</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Complainant</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Respondent</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Complainant(s)</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Respondent(s)</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Nature of Complaint</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date Filed</th>
@@ -171,14 +281,15 @@ export default function ViewBlotters() {
             {blotters.map((blotter) => (
               <tr key={blotter._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{blotter.caseNo}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{blotter.complainantInfo?.fullName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{blotter.respondentInfo?.fullName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getPartyNames(blotter, 'complainants')}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getPartyNames(blotter, 'respondents')}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{blotter.natureOfComplaint}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${blotter.status === 'settled' ? 'bg-green-100 text-green-800' : 
-                      blotter.status === 'declined' ? 'bg-red-100 text-red-800' : 
-                      'bg-yellow-100 text-yellow-800'}`}>
+                    ${blotter.status === 'settled' ? 'bg-green-100 text-green-800' :
+                      blotter.status === 'endorsed' ? 'bg-red-100 text-red-800' :
+                      blotter.status === 'pending' ? 'bg-blue-100 text-blue-800' :
+                      'bg-yellow-100 text-yellow-800' }`}>
                     {blotter.status.charAt(0).toUpperCase() + blotter.status.slice(1)}
                   </span>
                 </td>
@@ -199,9 +310,9 @@ export default function ViewBlotters() {
         </table>
       </div>
 
-      {/* View Document Modal */}
+      {/* View Blotter Modal */}
       {showModal && selectedBlotter && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
@@ -216,7 +327,7 @@ export default function ViewBlotters() {
 
               <div className="space-y-6">
                 {/* Blotter Information */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Case No.
@@ -234,49 +345,213 @@ export default function ViewBlotters() {
                     )}
                   </div>
 
+                  {/* Complainants - editable list */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Complainant
+                      Complainant(s)
                     </label>
+
                     {isEditing ? (
-                      <select
-                        name="complainant"
-                        value={editForm.complainantInfo?.fullName || ''}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
-                      >
-                        <option value="">Select complainant</option>
-                        {residents.map((resident) => (
-                          <option key={resident._id} value={resident.fullName}>
-                            {resident.fullName}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="space-y-3">
+                        {(editForm.complainants && editForm.complainants.length > 0) ? (
+                          (editForm.complainants as Party[]).map((p, idx) => (
+                            <div key={idx} className="p-3 border border-gray-200 rounded-md">
+                              <div className="flex items-center gap-3">
+                                <select
+                                  value={p.type}
+                                  onChange={e => handlePartyTypeChange('complainants', idx, e.target.value as 'Resident' | 'Non-Resident')}
+                                  className="p-2 border text-black border-gray-300 rounded-md text-sm"
+                                >
+                                  <option value="Resident">Resident</option>
+                                  <option value="Non-Resident">Non-Resident</option>
+                                </select>
+
+                                {p.type === 'Resident' ? (
+                                  <div className="relative flex-1">
+                                    <input
+                                      type="text"
+                                      placeholder="Search resident..."
+                                      value={p.search ?? ''}
+                                      onChange={e => handlePartySearchChange('complainants', idx, e.target.value)}
+                                      onFocus={() => updatePartyField('complainants', idx, { showDropdown: true })}
+                                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                                      autoComplete="off"
+                                    />
+                                    {p.showDropdown && (p.search ?? '') !== '' && (
+                                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                        {filterResidents(p.search ?? '').length > 0 ? (
+                                          filterResidents(p.search ?? '').map(resident => (
+                                            <button
+                                              key={resident._id}
+                                              type="button"
+                                              onClick={() => selectResidentForParty('complainants', idx, resident)}
+                                              className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                                            >
+                                              {resident.fullName}
+                                            </button>
+                                          ))
+                                        ) : (
+                                          <div className="px-4 py-2 text-gray-500 text-sm">
+                                            No residents found matching “{p.search}”
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    placeholder="Enter name..."
+                                    value={p.name}
+                                    onChange={e => handleNonResidentNameChange('complainants', idx, e.target.value)}
+                                    className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                                  />
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeParty('complainants', idx)}
+                                  className="p-2 bg-green-600 text-white hover:bg-green-700 hover:text-white rounded-md"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No complainants</p>
+                        )}
+
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => addParty('complainants')}
+                            className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                          >
+                            + Add Complainant
+                          </button>
+                        </div>
+                      </div>
                     ) : (
-                      <p className="text-gray-900">{selectedBlotter.complainantInfo?.fullName}</p>
+                      <div className="space-y-1">
+                        {(selectedBlotter.complainants && selectedBlotter.complainants.length > 0)
+                          ? selectedBlotter.complainants.map((p, i) => (
+                              <div key={i} className="text-gray-900">
+                                <span className="font-medium">{p.name}</span>
+                                <span className="ml-2 text-xs text-gray-500">({p.type})</span>
+                              </div>
+                            ))
+                          : selectedBlotter.complainantInfo?.fullName ? (
+                              <p className="text-gray-900">{selectedBlotter.complainantInfo.fullName}</p>
+                            ) : (
+                              <p className="text-gray-500">No complainant information</p>
+                            )}
+                      </div>
                     )}
                   </div>
 
+                  {/* Respondents - editable list */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Respondent
+                      Respondent(s)
                     </label>
+
                     {isEditing ? (
-                      <select
-                        name="respondent"
-                        value={editForm.respondentInfo?.fullName || ''}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
-                      >
-                        <option value="">Select respondent</option>
-                        {residents.map((resident) => (
-                          <option key={resident._id} value={resident.fullName}>
-                            {resident.fullName}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="space-y-3">
+                        {(editForm.respondents && editForm.respondents.length > 0) ? (
+                          (editForm.respondents as Party[]).map((p, idx) => (
+                            <div key={idx} className="p-3 border border-gray-200 rounded-md">
+                              <div className="flex items-center gap-3">
+                                <select
+                                  value={p.type}
+                                  onChange={e => handlePartyTypeChange('respondents', idx, e.target.value as 'Resident' | 'Non-Resident')}
+                                  className="p-2 border text-black border-gray-300 rounded-md text-sm"
+                                >
+                                  <option value="Resident">Resident</option>
+                                  <option value="Non-Resident">Non-Resident</option>
+                                </select>
+
+                                {p.type === 'Resident' ? (
+                                  <div className="relative flex-1">
+                                    <input
+                                      type="text"
+                                      placeholder="Search resident..."
+                                      value={p.search ?? ''}
+                                      onChange={e => handlePartySearchChange('respondents', idx, e.target.value)}
+                                      onFocus={() => updatePartyField('respondents', idx, { showDropdown: true })}
+                                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                                      autoComplete="off"
+                                    />
+                                    {p.showDropdown && (p.search ?? '') !== '' && (
+                                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                        {filterResidents(p.search ?? '').length > 0 ? (
+                                          filterResidents(p.search ?? '').map(resident => (
+                                            <button
+                                              key={resident._id}
+                                              type="button"
+                                              onClick={() => selectResidentForParty('respondents', idx, resident)}
+                                              className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                                            >
+                                              {resident.fullName}
+                                            </button>
+                                          ))
+                                        ) : (
+                                          <div className="px-4 py-2 text-gray-500 text-sm">
+                                            No residents found matching “{p.search}”
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    placeholder="Enter name..."
+                                    value={p.name}
+                                    onChange={e => handleNonResidentNameChange('respondents', idx, e.target.value)}
+                                    className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                                  />
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeParty('respondents', idx)}
+                                  className="p-2 bg-green-600 text-white hover:bg-green-700 hover:text-white rounded-md"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No respondents</p>
+                        )}
+
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => addParty('respondents')}
+                            className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                          >
+                            + Add Respondent
+                          </button>
+                        </div>
+                      </div>
                     ) : (
-                      <p className="text-gray-900">{selectedBlotter.respondentInfo?.fullName}</p>
+                      <div className="space-y-1">
+                        {(selectedBlotter.respondents && selectedBlotter.respondents.length > 0)
+                          ? selectedBlotter.respondents.map((p, i) => (
+                              <div key={i} className="text-gray-900">
+                                <span className="font-medium">{p.name}</span>
+                                <span className="ml-2 text-xs text-gray-500">({p.type})</span>
+                              </div>
+                            ))
+                          : selectedBlotter.respondentInfo?.fullName ? (
+                              <p className="text-gray-900">{selectedBlotter.respondentInfo.fullName}</p>
+                            ) : (
+                              <p className="text-gray-500">No respondent information</p>
+                            )}
+                      </div>
                     )}
                   </div>
 
@@ -332,8 +607,9 @@ export default function ViewBlotters() {
                         className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
                       >
                         <option value="pending">Pending</option>
+                        <option value="on-going">On-going</option>
                         <option value="settled">Settled</option>
-                        <option value="declined">Declined</option>
+                        <option value="endorsed">Endorsed</option>
                       </select>
                     </div>
                   )}
@@ -344,7 +620,7 @@ export default function ViewBlotters() {
                   {!isEditing ? (
                     <button
                       onClick={handleEdit}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                     >
                       <FaEdit className="inline-block mr-2" />
                       Edit

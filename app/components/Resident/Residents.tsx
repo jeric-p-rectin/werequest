@@ -89,9 +89,9 @@ const Residents = () => {
             placeholder="Search residents..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full pl-10 pr-4 py-2 text-black border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
           />
-          <FaSearch className="absolute left-3 top-3 text-gray-400" />
+          <FaSearch className="absolute left-3 top-3 text-black" />
         </div>
       </div>
 
@@ -159,7 +159,7 @@ const Residents = () => {
 
       {/* Details Modal */}
       {showModal && selectedResident && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
@@ -173,7 +173,7 @@ const Residents = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+                <div className="space-y-7">
                   <h3 className="font-medium text-lg text-gray-800">Personal Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -215,12 +215,12 @@ const Residents = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-7">
                   <h3 className="font-medium text-lg text-gray-800">Contact & Address</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Email</p>
-                      <p className="text-gray-800">{selectedResident.email}</p>
+                      <p className="overflow-x-auto text-gray-800">{selectedResident.email}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Phone Number</p>
@@ -237,7 +237,7 @@ const Residents = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-7">
                   <h3 className="font-medium text-lg text-gray-800">Status & Benefits</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>

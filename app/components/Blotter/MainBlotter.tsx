@@ -20,16 +20,6 @@ export default function MainBlotter() {
             <h1 className="text-2xl font-bold text-gray-800">Blotter Management</h1>
             <div className="flex gap-4">
               <button
-                onClick={() => setActiveTab('analytics')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors
-                  ${activeTab === 'analytics'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-              >
-                Analytics
-              </button>
-              <button
                 onClick={() => setActiveTab('view')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors
                   ${activeTab === 'view'

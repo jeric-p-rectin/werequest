@@ -28,7 +28,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow">
+      <div className="flex-grow h-screen overflow-auto">
         <Profile />
       </div>
     </div>

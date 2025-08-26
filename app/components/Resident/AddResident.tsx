@@ -129,7 +129,7 @@ export default function AddResident() {
 
       // Show success message and redirect
       alert("Resident registered successfully!");
-      router.push("/dashboard");
+      router.push("/resident");
     } catch (error) {
       console.error("Registration error:", error);
       setError(error instanceof Error ? error.message : "Error registering resident");
