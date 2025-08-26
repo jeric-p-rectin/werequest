@@ -6,6 +6,16 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 
+interface Business {
+  _id?: string | { toString?: () => string };
+  id?: string;
+  ownerName?: string;
+  businessName?: string;
+  address?: string;
+  businessNature?: string;
+  dateEstablished?: string;
+}
+
 export default function BusinessPage() {
   const { data: session, status } = useSession();
 
@@ -14,7 +24,7 @@ export default function BusinessPage() {
 
   const [search, setSearch] = useState('');
   const [showNew, setShowNew] = useState(false);
-  const [showEdit, setShowEdit] = useState<any>(null);
+  const [showEdit, setShowEdit] = useState<string | null>(null);
   const [showDelete, setShowDelete] = useState<string | null>(null);
 
   // permit modal
@@ -22,7 +32,7 @@ export default function BusinessPage() {
   const [permitSrc, setPermitSrc] = useState('');
 
   // businesses state
-  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loadingBiz, setLoadingBiz] = useState(true);
 
   // form states
@@ -118,14 +128,14 @@ export default function BusinessPage() {
   };
 
   // open edit modal
-  const handleOpenEdit = (biz: any) => {
+  const handleOpenEdit = (biz: Business) => {
     const id = typeof biz._id === 'string' ? biz._id : biz._id?.toString?.() || biz.id;
-    setShowEdit(id);
-    setEditOwner(biz.ownerName);
-    setEditBiz(biz.businessName);
-    setEditAddr(biz.address);
-    setEditNature(biz.businessNature);
-    setEditEstablished(biz.dateEstablished?.slice(0, 10)); // format yyyy-mm-dd
+    setShowEdit(id as string);
+    setEditOwner(biz.ownerName as string);
+    setEditBiz(biz.businessName as string);
+    setEditAddr(biz.address as string);
+    setEditNature(biz.businessNature as string);
+    setEditEstablished(biz.dateEstablished?.slice(0, 10) as string); // format yyyy-mm-dd
   };
 
   // open permit modal (shows image and allows download)

@@ -29,7 +29,7 @@ export async function PUT(
     // Helper to sanitize user (remove password)
     const sanitizeUser = (user: Record<string, unknown> | null): Record<string, unknown> | null => {
       if (!user) return null;
-      const { password: _password, ...rest } = user;
+      const { ...rest } = user;
       return rest;
     };
 
