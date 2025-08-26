@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/app/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, context: unknown) {
+  const params = (context as { params?: { id?: string } } | undefined)?.params;
   const id = params?.id;
   if (!id) {
     return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
