@@ -12,24 +12,11 @@ import { redirect } from 'next/navigation';
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState<'home' | 'announcement' | 'request' | 'profile'>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const { data: session, status } = useSession();
   const [announcements, setAnnouncements] = useState([]);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        notifRef.current && !notifRef.current.contains(e.target as Node)
-      ) {
-        setOpenDropdown('none');
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
