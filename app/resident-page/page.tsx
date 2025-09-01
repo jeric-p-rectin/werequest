@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { FaBell, FaUser, FaHome, FaBullhorn, FaFileAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { FaUser, FaHome, FaBullhorn, FaFileAlt, FaBars, FaTimes } from 'react-icons/fa';
 import ViewRequestedDocuments from '../components/Document/ViewRequestedDocuments';
 import Profile from '../components/Profile';
 import RequestDocument from '../components/Document/RequestDocument';
@@ -11,7 +11,6 @@ import { redirect } from 'next/navigation';
 
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState<'home' | 'announcement' | 'request' | 'profile'>('home');
-  const [openDropdown, setOpenDropdown] = useState<'none' | 'notification'>('none');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -105,24 +104,6 @@ export default function HomePage() {
 
         {/* Right: Notification, Profile, and Mobile Menu Button */}
         <div className="flex items-center gap-4">
-          {/* Notification */}
-          <div ref={notifRef} className="relative">
-            <button
-              className="nav cnav bell flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-green-600 transition relative"
-              onClick={() => setOpenDropdown(openDropdown === 'notification' ? 'none' : 'notification')}
-              type="button"
-            >
-              <FaBell className="text-xl" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            {openDropdown === 'notification' && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-black rounded-lg shadow-lg z-50 p-4">
-                <div className="font-semibold mb-2">Notifications</div>
-                <div className="text-sm">No new notifications.</div>
-              </div>
-            )}
-          </div>
-
           {/* Profile */}
           <div ref={profileRef} className="relative">
             <button

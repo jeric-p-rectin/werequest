@@ -122,16 +122,6 @@ export default function Home() {
           <Link href="/forgot" className="text-sm text-black hover:underline mt-1">
             Forgot Password
           </Link>
-          <div className="w-full flex items-center justify-center mt-2">
-            <p className="text-sm text-black">Don&apos;t have an account?</p>
-          </div>
-          <button 
-            type="button"
-            className="block w-full cursor-pointer text-sm text-white text-center py-3 rounded-3xl transition duration-300 ease-in-out bg-[#80eb15] hover:bg-[#3c5e1a] disabled:bg-gray-400"
-            onClick={() => router.push("/create-account")}
-          >
-            Create Account
-          </button>
         </form>
       </div>
     </main>
