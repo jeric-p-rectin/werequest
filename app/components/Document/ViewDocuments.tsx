@@ -11,6 +11,7 @@ export default function ViewDocuments() {
   const [selectedDocument, setSelectedDocument] = useState<RequestedDocument | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // <-- new state for search
 
   // Helper function to get requestor's name
   const getRequestorName = (doc: RequestedDocument) => {
@@ -137,6 +138,11 @@ export default function ViewDocuments() {
     }
   };
 
+  // Filter documents by requestor name (case-insensitive)
+  const filteredDocuments = documents.filter((doc) =>
+    getRequestorName(doc).toLowerCase().includes(searchQuery.trim().toLowerCase())
+  );
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
@@ -151,8 +157,29 @@ export default function ViewDocuments() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Document Requests</h2>
+      {/* Search area (placed below the Documents Table as requested) */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Search by Requestor's Name</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Enter requestor name..."
+            className="w-full p-2 border border-gray-300 rounded-md text-gray-900"
+          />
+          <button
+            onClick={() => setSearchQuery('')}
+            className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
+            type="button"
+          >
+            Clear
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">{filteredDocuments.length} result(s) found</p>
+        {searchQuery && filteredDocuments.length === 0 && (
+          <p className="text-sm text-red-500 mt-2">No documents found for "{searchQuery}".</p>
+        )}
       </div>
 
       {/* Documents Table */}
@@ -169,7 +196,7 @@ export default function ViewDocuments() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {documents.map((doc) => (
+            {filteredDocuments.map((doc) => (
               <tr key={doc._id.toString()} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{doc.requestId}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getRequestorName(doc)}</td>

@@ -204,7 +204,7 @@ const ViewAnnouncements = ({ announcements, onRefresh, readOnly }: ViewAnnouncem
 
       {/* Edit Modal */}
       {editing && !readOnly && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent bg-opacity-40">
           <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md relative">
             <button
               className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
@@ -253,7 +253,7 @@ const ViewAnnouncements = ({ announcements, onRefresh, readOnly }: ViewAnnouncem
               />
               <button
                 type="submit"
-                className="bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50 w-full"
+                className="rounded-lg font-semibold transition-colors duration-200 focus:outline-none bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white p-2"
                 disabled={loading}
               >
                 {loading ? 'Saving...' : 'Save Changes'}

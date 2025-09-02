@@ -70,7 +70,7 @@ const SideNavigation = () => {
       <div className="p-4 flex items-center gap-4 border-b border-white/20">
         <Link href="/profile" className="block">
           <div className="w-10 h-10 rounded-full overflow-hidden border border-white/40 flex items-center justify-center bg-white/10">
-            <FaUserCircle className="w-8 h-8 text-white/80" />
+            <FaUserCircle className="w-8 h-8 text-white/80 transition-colors duration-300 ease-in-out" />
           </div>
         </Link>
         <div>
@@ -93,14 +93,19 @@ const SideNavigation = () => {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg 
+                  transition-colors duration-300 ease-in-out
                   ${isActive 
-                    ? 'bg-white/10 text-white font-medium' 
-                    : 'text-white/80 hover:bg-white/5'
+                    ? 'bg-white/20 text-white font-medium' 
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`}
               >
-                {item.icon}
-                <span>{item.label}</span>
+                <span className="transition-colors duration-300 ease-in-out">
+                  {item.icon}
+                </span>
+                <span className="transition-colors duration-300 ease-in-out">
+                  {item.label}
+                </span>
               </Link>
             );
           })}

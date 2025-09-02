@@ -99,7 +99,7 @@ const AddAnnouncement = ({ onAdded }: { onAdded: () => void }) => {
       <div className="text-sm text-gray-600">Posted by: <span className="font-semibold text-green-700">{postedBy}</span></div>
       <button
         type="submit"
-        className="bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50"
+        className="rounded-lg font-semibold transition-colors duration-200 focus:outline-none bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white p-2"
         disabled={loading}
       >
         {loading ? 'Adding...' : 'Add Announcement'}

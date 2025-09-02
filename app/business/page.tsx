@@ -213,7 +213,7 @@ const handleOpenPermit = (biz?: Business) => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowNew(true)} className="nav pnav flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"><FaPlus /> New</button>
+            <button onClick={() => setShowNew(true)} className="flex items-center gap-2 px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 rounded-xl cursor-pointer"><FaPlus /> New</button>
           </div>
         </div>
 
@@ -244,9 +244,9 @@ const handleOpenPermit = (biz?: Business) => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.businessNature}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{b.dateEstablished ? new Date(b.dateEstablished).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center flex gap-2 justify-center">
-                        <button onClick={() => handleOpenPermit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFile /> Permit</button>
-                        <button onClick={() => handleOpenEdit(b)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaEdit /> Edit</button>
-                        <button onClick={() => setShowDelete(id ?? null)} className="nav width0 flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"><FaFlag /> Claim</button>
+                        <button onClick={() => handleOpenPermit(b)} className="bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl p-2 flex items-center"><FaFile /> Permit</button>
+                        <button onClick={() => handleOpenEdit(b)} className="bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl p-2 flex items-center"><FaEdit /> Edit</button>
+                        <button onClick={() => setShowDelete(id ?? null)} className="bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl p-2 flex items-center"><FaFlag /> Claim</button>
                       </td>
                     </tr>
                   );
@@ -283,8 +283,8 @@ const handleOpenPermit = (biz?: Business) => {
                 <input type="date" value={established} onChange={e => setEstablished(e.target.value)} className="w-full border rounded px-3 py-2" />
               </div>
               <div className="flex justify-between mt-4">
-                <button type="reset" className="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 nav">Clear</button>
-                <button type="submit" className="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 nav pnav">{loadingNew ? 'Saving...' : 'Save'}</button>
+                <button type="reset" className="py-2 px-4 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer">Clear</button>
+                <button type="submit" className="py-2 px-4 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer">{loadingNew ? 'Saving...' : 'Save'}</button>
               </div>
             </form>
           </div>
@@ -317,7 +317,7 @@ const handleOpenPermit = (biz?: Business) => {
                 <input type="date" value={editDateEstablished} onChange={e => setEditEstablished(e.target.value)} className="w-full border rounded px-3 py-2 text-black" />
               </div>
               <div className="flex justify-end mt-4">
-                <button type="submit" className="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 nav pnav">{loadingEdit ? 'Updating...' : 'Update'}</button>
+                <button type="submit" className="py-2 px-4 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl">{loadingEdit ? 'Updating...' : 'Update'}</button>
               </div>
             </form>
           </div>
@@ -331,8 +331,8 @@ const handleOpenPermit = (biz?: Business) => {
               <p className="text-3xl font-bold mb-2">WARNING</p>
               <p className="text-lg text-center">Want to clean things up <br />by trashing this business?</p>
               <div className="flex gap-4 mt-6">
-                <button type="button" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition" onClick={() => setShowDelete(null)}>No, Cancel</button>
-                <button type="button" onClick={handleDelete} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Yes, Move</button>
+                <button type="button" className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl" onClick={() => setShowDelete(null)}>No, Cancel</button>
+                <button type="button" onClick={handleDelete} className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl">Yes, Move</button>
               </div>
             </div>
           </div>
@@ -353,8 +353,8 @@ const handleOpenPermit = (biz?: Business) => {
                     <Image src={permitSrc} alt="Permit" fill className="object-contain" />
                   </div>
                   <div className="flex justify-between mt-4">
-                    <a href={permitSrc} download className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Download</a>
-                    <button onClick={() => setShowPermit(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition">Close</button>
+                    <a href={permitSrc} download className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl">Download</a>
+                    <button onClick={() => setShowPermit(false)} className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl">Close</button>
                   </div>
                 </div>
               </div>

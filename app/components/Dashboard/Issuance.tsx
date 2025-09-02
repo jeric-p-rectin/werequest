@@ -468,31 +468,47 @@ export default function IssuanceDashboard() {
     <div className="space-y-8">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="p-6 rounded-lg shadow-lg hover:shadow-2xl bg-white transition-shadow duration-300"> 
-          <p className="text-3xl font-bold text-gray-900">{pending}</p>
+        {/* Pending */}
+        <div className="p-6 rounded-lg shadow-lg border-black border-1 hover:shadow-2xl bg-white transition-shadow duration-300"> 
+          <p className="text-3xl font-bold text-[#3c5e1a]">{pending}</p>
           <p className="text-lg font-medium text-gray-900">Pending</p>
-          <p className="text-xs mt-2 text-gray-900">{total ? ((pending/total)*100).toFixed(0) : 0}% of Total</p>
+          <p className="text-xs mt-2 flex items-center gap-1 text-[#008000]">
+            <FaArrowUp className="w-3 h-3 text-[#008000]" />
+            {total ? ((pending/total)*100).toFixed(0) : 0}% of Total
+          </p>
         </div>
-        <div className="p-6 rounded-lg shadow-lg hover:shadow-2xl bg-white transition-shadow duration-300"> 
-          <p className="text-3xl font-bold text-gray-900">{approved}</p>
+
+        {/* Approved */}
+        <div className="p-6 rounded-lg shadow-lg border-black border-1 hover:shadow-2xl bg-white transition-shadow duration-300"> 
+          <p className="text-3xl font-bold text-[#3c5e1a]">{approved}</p>
           <p className="text-lg font-medium text-gray-900">Approved</p>
-          <p className="text-xs mt-2 text-gray-900">{total ? ((approved/total)*100).toFixed(0) : 0}% of Total</p>
+          <p className="text-xs mt-2 flex items-center gap-1 text-[#008000]">
+            <FaArrowUp className="w-3 h-3 text-[#008000]" />
+            {total ? ((approved/total)*100).toFixed(0) : 0}% of Total
+          </p>
         </div>
-        <div className="p-6 rounded-lg shadow-lg hover:shadow-2xl bg-white transition-shadow duration-300"> 
-          <p className="text-3xl font-bold text-gray-900">{declined}</p>
+
+        {/* Endorsed */}
+        <div className="p-6 rounded-lg shadow-lg border-black border-1 hover:shadow-2xl bg-white transition-shadow duration-300"> 
+          <p className="text-3xl font-bold text-[#3c5e1a]">{declined}</p>
           <p className="text-lg font-medium text-gray-900">Endorsed</p>
-          <p className="text-xs mt-2 text-gray-900">{total ? ((declined/total)*100).toFixed(0) : 0}% of Total</p>
-          </div>
-        <div className="p-6 rounded-lg shadow-lg hover:shadow-2xl bg-white transition-shadow duration-300"> 
-          <p className="text-3xl font-bold text-gray-900">{total}</p>
+          <p className="text-xs mt-2 flex items-center gap-1 text-[#FF0000]">
+            <FaArrowDown className="w-3 h-3 text-[#FF0000]" />
+            {total ? ((declined/total)*100).toFixed(0) : 0}% of Total
+          </p>
+        </div>
+
+        {/* Total */}
+        <div className="p-6 rounded-lg shadow-lg border-black border-1 hover:shadow-2xl bg-white transition-shadow duration-300"> 
+          <p className="text-3xl font-bold text-[#3c5e1a]">{total}</p>
           <p className="text-lg font-medium text-gray-900">Total</p>
-          <p className="text-xs mt-2 text-gray-900">+{total}</p>
+          <p className="text-xs mt-2 text-[#008000]">+{total}</p>
         </div>
       </div>
 
       {/* Filters (UI only) */}
-      <div className="flex flex-wrap gap-2 items-center mb-2">
-        <select className="border rounded px-2 py-1 text-gray-900" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
+      <div className="flex flex-wrap gap-2 items-center justify-center mb-2">
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
           <option value="All">By Date (Quick)</option>
           <option value="Today">Today</option>
           <option value="This Week">This Week</option>
@@ -500,14 +516,14 @@ export default function IssuanceDashboard() {
           <option value="This Year">This Year</option>
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-2 py-1 text-gray-900" value={monthFilter} onChange={e => setMonthFilter(e.target.value)}>
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={monthFilter} onChange={e => setMonthFilter(e.target.value)}>
           <option value="All">By Month</option>
           {allMonths.map(m => (
             <option key={m} value={m}>{months[m]}</option>
           ))}
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-2 py-1 text-gray-900" value={yearFilter} onChange={e => setYearFilter(e.target.value)}>
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={yearFilter} onChange={e => setYearFilter(e.target.value)}>
           <option value="All">By Year</option>
           {allYears.map(y => (
             <option key={y} value={y}>{y}</option>
@@ -515,7 +531,7 @@ export default function IssuanceDashboard() {
           <option value="All">All</option>
         </select>
         <select
-          className="border rounded px-3 py-2 text-gray-900"
+          className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900"
           value={purokFilter}
           onChange={e => setPurokFilter(e.target.value)}
         >
@@ -528,7 +544,7 @@ export default function IssuanceDashboard() {
           <option value="All">All</option>
         </select>
         <select
-          className="border rounded px-3 py-2 text-gray-900"
+          className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900"
           value={docTypeFilter}
           onChange={e => setDocTypeFilter(e.target.value)}
         >
@@ -538,27 +554,27 @@ export default function IssuanceDashboard() {
           ))}
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-3 py-2 text-gray-900" value={employmentFilter} onChange={e => setEmploymentFilter(e.target.value)}>
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={employmentFilter} onChange={e => setEmploymentFilter(e.target.value)}>
           <option value="All">By Employment</option>
           <option value="employed">Employed</option>
           <option value="unemployed">Unemployed</option>
           <option value="self-employed">Self-Employed</option>
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-3 py-2 text-gray-900" value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
           <option value="All">By Gender</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-3 py-2 text-gray-900" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
           <option value="All">By Priority</option>
           <option value="PWD">PWD</option>
           <option value="4Ps">4Ps</option>
           <option value="Solo Parent">Solo Parent</option>
           <option value="All">All</option>
         </select>
-        <select className="border rounded px-3 py-2 text-gray-900" value={ageFilter} onChange={e => setAgeFilter(e.target.value)}>
+        <select className="border border-gray-400 rounded text-[13px] px-1 py-2 text-gray-900" value={ageFilter} onChange={e => setAgeFilter(e.target.value)}>
           <option value="All">Select Age</option>
           <option value="15">15</option>
           <option value="16">16</option>
@@ -575,7 +591,7 @@ export default function IssuanceDashboard() {
         </div>
 
       {/* Overall Request Chart */}
-      <div className="bg-white rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
+      <div className="bg-white border-black border-1 rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
         <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Overall Request (Monthly)</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={monthlyStats} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
@@ -598,7 +614,7 @@ export default function IssuanceDashboard() {
             {filteredTimeSeries.length >= 6 && nextMonthPrediction !== null ? (
               <>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl font-bold text-green-800">{nextMonthPrediction}</span>
+                  <span className="text-xl font-bold text-green-800">{nextMonthPrediction}</span>
                   {trend === 'up' && <FaArrowUp className="text-green-600" title="Upward trend" />}
                   {trend === 'down' && <FaArrowDown className="text-red-600" title="Downward trend" />}
                   {trend === 'flat' && <FaMinus className="text-gray-500" title="Flat trend" />}
@@ -652,29 +668,29 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Top Requestors Placeholder */}
-      <div className="bg-white rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Top Requestors Within a Week</h3>
+      <div className="bg-white rounded-lg border-black border-1 shadow-2xl p-6 mt-4 transition-shadow duration-300">
+        <h3 className="text-xl text-center font-semibold text-gray-900 mb-4">Top Requestors Within a Week</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="border rounded-lg p-4 shadow-lg hover:shadow-2xl transition-shadow duration-300">
-            <p className="font-semibold text-gray-900">Top Resident</p>
+          <div className=" p-4">
+            <p className="font-medium text-gray-900">Top Resident</p>
             <ol className="list-decimal ml-4 text-sm mt-2 text-gray-900">
               {topResidents.length === 0 ? <li>No data</li> : topResidents.map((name, i) => <li key={i}>{name}</li>)}
             </ol>
           </div>
-          <div className="border rounded-lg p-4 shadow-lg hover:shadow-2xl transition-shadow duration-300">
-            <p className="font-semibold text-gray-900">Age with the Most Requests</p>
+          <div className=" p-4">
+            <p className="font-medium text-gray-900">Age with the Most Requests</p>
             <ol className="list-decimal ml-4 text-sm mt-2 text-gray-900">
               {topAges.length === 0 ? <li>No data</li> : topAges.map((age, i) => <li key={i}>{age}</li>)}
             </ol>
         </div>
-          <div className="border rounded-lg p-4 shadow-lg hover:shadow-2xl transition-shadow duration-300">
-            <p className="font-semibold text-gray-900">Purok with the Most Requests</p>
+          <div className=" p-4">
+            <p className="font-medium text-gray-900">Purok with the Most Requests</p>
             <ol className="list-decimal ml-4 text-sm mt-2 text-gray-900">
               {topPuroks.length === 0 ? <li>No data</li> : topPuroks.map((purok, i) => <li key={i}>{purok}</li>)}
             </ol>
             </div>
-          <div className="border rounded-lg p-4 shadow-lg hover:shadow-2xl transition-shadow duration-300">
-            <p className="font-semibold text-gray-900">Days with the Most Requests</p>
+          <div className=" p-4">
+            <p className="font-medium text-gray-900">Days with the Most Requests</p>
             <ol className="list-decimal ml-4 text-sm mt-2 text-gray-900">
               {topDays.length === 0 ? <li>No data</li> : topDays.map((day, i) => <li key={i}>{day}</li>)}
             </ol>
@@ -683,8 +699,8 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Per Category: Request by Document */}
-      <div className="bg-white rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">Request by Document</h3>
+      <div className="bg-white border-black border-1 rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">Request by Document</h3>
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Bar Chart */}
           <div className="w-full md:w-2/3 h-96 bg-gray-50 rounded-lg shadow-inner p-4 flex items-center justify-center">
@@ -737,8 +753,7 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Request by Employment & Gender Pie Charts */}
-      <div className="bg-white rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">Request by Employment & Gender</h3>
+      <div className="bg-white border-black border-1 rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
         <div className="flex flex-col md:flex-row gap-8 items-start justify-center">
           {/* Employment Pie Chart */}
           <div className="w-full md:w-1/2 flex flex-col items-center">
@@ -788,12 +803,13 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Request by PWD Category Pie Chart & Table */}
-      <div className="bg-white rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">Request by PWD Category</h3>
+      <div className="bg-white border-black border-1 rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
+        {/* <h3 className="text-xl font-bold text-gray-900 mb-6">Request by PWD Category</h3> */}
         <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center">
           {/* Pie Chart */}
           <div className="w-full md:w-1/2 flex flex-col items-center justify-center min-h-[340px]">
-            <ResponsiveContainer width="100%" height={300}>
+            <h3 className="text-xl font-bold text-gray-900">Request by PWD Category</h3>
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
                   data={pwdCategoryData}
@@ -814,7 +830,7 @@ export default function IssuanceDashboard() {
             </ResponsiveContainer>
           </div>
           {/* Divider for desktop */}
-          <div className="hidden md:block w-px bg-gray-200 mx-2"></div>
+          {/* <div className="hidden md:block w-px bg-gray-200 mx-2"></div> */}
           {/* Table */}
           <div className="w-full md:w-1/2 flex flex-col justify-center">
             <div className="overflow-x-auto">
@@ -843,8 +859,8 @@ export default function IssuanceDashboard() {
       </div>
 
       {/* Request by Priority Category Table & Bar Graph */}
-      <div className="bg-white rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">Request by Priority Category</h3>
+      <div className="bg-white border-black border-1 rounded-lg shadow-2xl p-6 mt-4 transition-shadow duration-300">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">Request by Priority Category</h3>
         <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center">
           {/* Table */}
           <div className="w-full md:w-1/2 flex flex-col justify-center">

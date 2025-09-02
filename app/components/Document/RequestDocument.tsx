@@ -518,7 +518,7 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
             <button
               type="button"
               onClick={handleAddNew}
-              className="w-full sm:w-auto px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
+              className="w-full sm:w-auto px-6 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
             >
               Add New
             </button>
@@ -526,7 +526,7 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+            className="w-full sm:w-auto px-6 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
           >
             {isLoading ? 'Submitting...' : 'Submit'}
           </button>
@@ -550,7 +550,7 @@ export default function RequestDocument({ onBack }: RequestDocumentProps) {
             </div>
             <button
               onClick={handleGotIt}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
+              className="w-full px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
             >
               Got It
             </button>

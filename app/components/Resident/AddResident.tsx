@@ -511,14 +511,14 @@ export default function AddResident() {
           <div className="flex justify-end space-x-4 pt-6">
             <button
               type="reset"
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
             >
               Clear
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400"
+              className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl disabled:bg-gray-400"
             >
               {isLoading ? "Registering..." : "Save"}
             </button>

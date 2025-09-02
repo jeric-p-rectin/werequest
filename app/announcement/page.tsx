@@ -20,8 +20,8 @@ export default function AnnouncementPage() {
       <SideNavigation />
       <div className="w-64 flex-shrink-0" />
       <div className="flex-1 p-8">
-        <h1 className="text-3xl font-bold text-black mb-8 flex items-center justify-between">
-          <span>Announcements</span>
+        <h1 className="text-3xl text-center font-bold text-black mb-6">
+          Announcements
         </h1>
         <MainAnnouncement />
       </div>

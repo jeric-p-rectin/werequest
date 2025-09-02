@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
+import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
 interface UserInfo {
   username: string;
@@ -266,48 +267,55 @@ export default function BlotterDashboard() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 px-6">
         {summaryData.map((card, i) => (
-          <div key={i} className="p-6 rounded-lg shadow-2xl bg-white flex flex-col items-start border border-green-200">
-            <p className="text-3xl font-bold text-black">{card.value}</p>
-            <p className="text-lg font-medium text-black">{card.label}</p>
-            <p className="text-xs mt-2 flex items-center gap-1 text-black"> <i className={`fas ${card.icon}`}></i> {card.percent}% from Total</p>
+          <div key={i} className="p-6 rounded-lg shadow-lg border-black border-1 hover:shadow-2xl bg-white transition-shadow duration-300 flex flex-col items-start">
+            <p className="text-3xl font-bold text-[#3c5e1a]">{card.value}</p>
+            <p className="text-lg font-medium text-gray-900">{card.label}</p>
+            <p className={`text-xs mt-2 flex items-center gap-1 ${card.label === "Endorsed" ? "text-[#FF0000]" : "text-[#008000]"}`}>
+            {(card.label === "On-going" || card.label === "Settled") && (
+              <FaArrowUp className="w-3 h-3 text-[#008000]" />
+            )}
+            {(card.label === "Endorsed") && (
+              <FaArrowDown className="w-3 h-3 text-[#FF0000]" />
+            )}
+              <i className={`fas ${card.icon}`}></i> {card.percent}% from Total
+            </p>
           </div>
         ))}
       </div>
+      
+      {/* Filters */}
+      <div className="flex flex-wrap justify-center gap-2 mb-6">
+        <select className="border border-gray-400 rounded px-1 py-2 text-[13px] text-gray-900" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
+          <option value="">By Date Filed</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="year">This Year</option>
+          <option value="all">All</option>
+        </select>
+        <select className="border border-gray-400 rounded px-1 py-2 text-[13px] text-gray-900" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <option value="">By Status</option>
+          <option value="On-going">On-going</option>
+          <option value="Settled">Settled</option>
+          <option value="Endorsed">Endorsed</option>
+        </select>
+        <select className="border border-gray-400 rounded px-1 py-2 text-[13px] text-gray-900" value={purokFilter} onChange={e => setPurokFilter(e.target.value)}>
+          <option value="">By Purok</option>
+          {puroks.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+        </select>
+        <select className="border border-gray-400 rounded px-1 py-2 text-[13px] text-gray-900" value={natureFilter} onChange={e => setNatureFilter(e.target.value)}>
+          <option value="">Select Nature</option>
+          {natureOfComplaintOptions.map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+        <select className="border border-gray-400 rounded px-1 py-2 text-[13px] text-gray-900 w-40" value={barType} onChange={e => setBarType(e.target.value as 'monthly' | 'annual')}>
+          <option value="monthly">Monthly</option>
+          <option value="annual">Annual</option>
+        </select>
+      </div>
 
-      {/* Filters and Main Chart */}
-      <div className="relative bg-white rounded-lg shadow-2xl px-6 py-8 mb-8 mx-6 flex flex-col md:flex-row md:items-end gap-6">
-        <div className="absolute left-6 top-6 flex flex-wrap gap-2 z-10">
-          <select className="border rounded px-3 py-2 text-black" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
-            <option value="">By Date Filed</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="all">All</option>
-          </select>
-          <input type="date" className="border rounded px-3 py-2 text-black" />
-          <select className="border rounded px-3 py-2 text-black" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-            <option value="">By Status</option>
-            <option value="On-going">On-going</option>
-            <option value="Settled">Settled</option>
-            <option value="Endorsed">Endorsed</option>
-          </select>
-          <select className="border rounded px-3 py-2 text-black" value={purokFilter} onChange={e => setPurokFilter(e.target.value)}>
-            <option value="">By Purok</option>
-            {puroks.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-          </select>
-          <select className="border rounded px-3 py-2 text-black" value={natureFilter} onChange={e => setNatureFilter(e.target.value)}>
-            <option value="">Select Nature</option>
-            {natureOfComplaintOptions.map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </div>
+      {/* Main Chart */}
+      <div className="relative bg-white border-black border-1 rounded-lg shadow-2xl px-6 py-8 mb-8 mx-6 flex flex-col md:flex-row md:items-end gap-6">
         <div className="flex-1 flex flex-col items-center">
-          <div className="flex justify-end w-full mb-2">
-            <select className="border rounded px-3 py-2 text-black w-40" value={barType} onChange={e => setBarType(e.target.value as 'monthly' | 'annual')}>
-              <option value="monthly">Monthly</option>
-              <option value="annual">Annual</option>
-            </select>
-          </div>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={barType === 'monthly' ? monthlyBarData : annualBarData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -325,34 +333,34 @@ export default function BlotterDashboard() {
 
       {/* Top Cases Section */}
       <div className="mx-6 my-8">
-        <h2 className="text-2xl font-bold text-black mb-4">TOP CASES CATEGORY IS WITHIN 7 DAYS</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">TOP CASES CATEGORY IS WITHIN 7 DAYS</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg shadow-lg border border-green-200 bg-white flex flex-col gap-2">
-            <p className="text-lg font-semibold text-black">Top Cases</p>
-            {topCases.map((c, i) => <p key={i} className="text-base text-black">{i+1}. {c}</p>)}
+          <div className="p-6 rounded-lg shadow-lg border-black border-1 bg-white flex flex-col gap-2">
+            <p className="text-lg font-semibold text-gray-900">Top Cases</p>
+            {topCases.map((c, i) => <p key={i} className="text-base text-gray-900">{i+1}. {c}</p>)}
           </div>
-          <div className="p-6 rounded-lg shadow-lg border border-green-200 bg-white flex flex-col gap-2">
-            <p className="text-lg font-semibold text-black">Age with the Most Cases</p>
-            {topAges.map((a, i) => <p key={i} className="text-base text-black">{i+1}. {a}</p>)}
+          <div className="p-6 rounded-lg shadow-lg border-black border-1 bg-white flex flex-col gap-2">
+            <p className="text-lg font-semibold text-gray-900">Age with the Most Cases</p>
+            {topAges.map((a, i) => <p key={i} className="text-base text-gray-900">{i+1}. {a}</p>)}
           </div>
-          <div className="p-6 rounded-lg shadow-lg border border-green-200 bg-white flex flex-col gap-2">
-            <p className="text-lg font-semibold text-black">Purok with the Most Cases</p>
-            {topPuroks.map((p, i) => <p key={i} className="text-base text-black">{i+1}. {p}</p>)}
+          <div className="p-6 rounded-lg shadow-lg border-black border-1 bg-white flex flex-col gap-2">
+            <p className="text-lg font-semibold text-gray-900">Purok with the Most Cases</p>
+            {topPuroks.map((p, i) => <p key={i} className="text-base text-gray-900">{i+1}. {p}</p>)}
           </div>
-          <div className="p-6 rounded-lg shadow-lg border border-green-200 bg-white flex flex-col gap-2">
-            <p className="text-lg font-semibold text-black">Days with the Most Cases</p>
-            {topDays.map((d, i) => <p key={i} className="text-base text-black">{i+1}. {d}</p>)}
-          </div>
+          <div className="p-6 rounded-lg shadow-lg border-black border-1 bg-white flex flex-col gap-2">
+            <p className="text-lg font-semibold text-gray-900">Days with the Most Cases</p>
+            {topDays.map((d, i) => <p key={i} className="text-base text-gray-900">{i+1}. {d}</p>)}
           </div>
         </div>
+      </div>
 
       {/* Per Category Section */}
       <div className="mx-6 my-8">
-        <h2 className="text-2xl font-bold text-black mb-4">PER CATEGORY</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">PER CATEGORY</h2>
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-2/3 bg-white rounded-lg shadow-2xl p-6 flex flex-col items-center">
             <div className="flex justify-end w-full mb-2">
-              <select className="border rounded px-3 py-2 text-black w-40">
+              <select className="border border-gray-400 rounded px-1 py-2 text-gray-900 w-40">
                 <option>Date Range</option>
                 <option>Today</option>
                 <option>This Week</option>
@@ -371,25 +379,25 @@ export default function BlotterDashboard() {
                 <Bar dataKey="lastYear" fill="#9caf68" name="Last Year" />
               </BarChart>
             </ResponsiveContainer>
-            </div>
+          </div>
           <div className="w-full md:w-1/3 bg-white rounded-lg shadow-2xl p-6 overflow-x-auto">
             <table className="min-w-[250px] w-full border border-gray-300 bg-white rounded-lg shadow text-base">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="p-3 border-b border-gray-300 font-bold text-black text-lg">Purok</th>
-                  <th className="p-3 border-b border-gray-300 font-bold text-black text-lg">This Year</th>
-                  <th className="p-3 border-b border-gray-300 font-bold text-black text-lg">Last Year</th>
+                  <th className="p-3 border-b border-gray-300 font-bold text-gray-900 text-lg">Purok</th>
+                  <th className="p-3 border-b border-gray-300 font-bold text-gray-900 text-lg">This Year</th>
+                  <th className="p-3 border-b border-gray-300 font-bold text-gray-900 text-lg">Last Year</th>
                 </tr>
               </thead>
               <tbody>
                 {purokBarData.map(row => (
                   <tr key={row.purok} className="hover:bg-gray-50">
-                    <td className="p-3 border-b border-gray-200 font-medium text-black flex items-center gap-2">
+                    <td className="p-3 border-b border-gray-200 font-medium text-gray-900 flex items-center gap-2">
                       <span className="inline-block w-4 h-4 rounded-full" style={{ backgroundColor: row.color }}></span>
                       {row.purok.charAt(0).toUpperCase() + row.purok.slice(1)}
                     </td>
-                    <td className="p-3 border-b border-gray-200 text-center text-black font-bold">{row.thisYear}</td>
-                    <td className="p-3 border-b border-gray-200 text-center text-black font-bold">{row.lastYear}</td>
+                    <td className="p-3 border-b border-gray-200 text-center text-gray-900 font-bold">{row.thisYear}</td>
+                    <td className="p-3 border-b border-gray-200 text-center text-gray-900 font-bold">{row.lastYear}</td>
                   </tr>
                 ))}
               </tbody>
@@ -401,7 +409,7 @@ export default function BlotterDashboard() {
       {/* Three Pie/Bar Charts Section */}
       <div className="mx-6 my-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="bg-white rounded-lg shadow-2xl p-6 flex flex-col items-center">
-          <p className="text-lg font-semibold text-black mb-2">Complainants Involvement</p>
+          <p className="text-lg font-semibold text-gray-800 mb-2">Complainants Involvement</p>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
@@ -415,7 +423,7 @@ export default function BlotterDashboard() {
           </ResponsiveContainer>
         </div>
         <div className="bg-white rounded-lg shadow-2xl p-6 flex flex-col items-center">
-          <p className="text-lg font-semibold text-black mb-2">Case Status</p>
+          <p className="text-lg font-semibold text-gray-800 mb-2">Case Status</p>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={caseStatusData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -429,7 +437,7 @@ export default function BlotterDashboard() {
           </ResponsiveContainer>
         </div>
         <div className="bg-white rounded-lg shadow-2xl p-6 flex flex-col items-center">
-          <p className="text-lg font-semibold text-black mb-2">Respondents Involvement</p>
+          <p className="text-lg font-semibold text-gray-800 mb-2">Respondents Involvement</p>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={respondentPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
@@ -441,8 +449,8 @@ export default function BlotterDashboard() {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
+        </div>
       </div>
-    </div>
     </>
   );
 }

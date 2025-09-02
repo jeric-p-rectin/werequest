@@ -23,8 +23,8 @@ export default function MainBlotter() {
                 onClick={() => setActiveTab('view')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors
                   ${activeTab === 'view'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-green-600 text-white shadow-lg'
+                    : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'
                   }`}
               >
                 View Blotters
@@ -33,8 +33,8 @@ export default function MainBlotter() {
                 onClick={() => setActiveTab('add')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors
                   ${activeTab === 'add'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-green-600 text-white shadow-lg'
+                    : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'
                   }`}
               >
                 Add Blotter

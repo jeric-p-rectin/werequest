@@ -28,13 +28,13 @@ const MainAnnouncement = () => {
       {/* Navigation Tabs */}
       <div className="flex gap-2 mb-4 justify-center">
         <button
-          className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors ${activeTab === 'view' ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors ${activeTab === 'view' ? 'bg-green-600 text-white shadow-lg' : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'}`}
           onClick={() => setActiveTab('view')}
         >
           Announcements
         </button>
         <button
-          className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors ${activeTab === 'add' ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors ${activeTab === 'add' ? 'bg-green-600 text-white shadow-lg' : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'}`}
           onClick={() => setActiveTab('add')}
         >
           Add Announcement

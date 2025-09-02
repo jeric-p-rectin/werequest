@@ -24,7 +24,7 @@ export default function MainResident() {
                   className={`px-4 py-2 rounded-md transition-colors ${
                     activeView === 'list'
                       ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'
                   }`}
                 >
                   View Residents
@@ -34,7 +34,7 @@ export default function MainResident() {
                   className={`px-4 py-2 rounded-md transition-colors ${
                     activeView === 'add'
                       ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'
                   }`}
                 >
                   Add Resident

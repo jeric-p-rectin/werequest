@@ -28,8 +28,8 @@ export default function MainRequest() {
                   onClick={() => setActiveTab('list')}
                   className={`px-4 py-2 rounded-md transition-colors ${
                     activeTab === 'list'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-green-600 text-white shadow-lg'
+                      : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'
                   }`}
                 >
                   {isResident ? 'My Requests' : 'View Documents'}
@@ -38,8 +38,8 @@ export default function MainRequest() {
                   onClick={() => setActiveTab('request')}
                   className={`px-4 py-2 rounded-md transition-colors ${
                     activeTab === 'request'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-green-600 text-white shadow-lg'
+                      : 'bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer'
                   }`}
                 >
                   Request Document
