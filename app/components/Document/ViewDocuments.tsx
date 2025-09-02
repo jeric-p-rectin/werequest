@@ -159,7 +159,7 @@ export default function ViewDocuments() {
     <div className="p-6">
       {/* Search area (placed below the Documents Table as requested) */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Search by Requestor's Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Search by Requestor&apos;s Name</label>
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -178,7 +178,7 @@ export default function ViewDocuments() {
         </div>
         <p className="text-sm text-gray-600 mt-2">{filteredDocuments.length} result(s) found</p>
         {searchQuery && filteredDocuments.length === 0 && (
-          <p className="text-sm text-red-500 mt-2">No documents found for "{searchQuery}".</p>
+          <p className="text-sm text-red-500 mt-2">No documents found for &quot;{searchQuery}&quot;.</p>
         )}
       </div>
 
