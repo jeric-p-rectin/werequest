@@ -207,7 +207,7 @@ export default function HomePage() {
                   <p className="text-black text-sm sm:text-base">You can request barangay documents and certificates here.</p>
                 </div>
                 <button
-                  className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
+                  className="px-4 sm:px-6 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
                   onClick={() => setShowRequestForm(true)}
                   style={{ whiteSpace: 'nowrap' }}
                   hidden={showRequestForm}

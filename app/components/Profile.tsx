@@ -406,13 +406,13 @@ export default function Profile() {
           <div className="ml-auto flex gap-2">
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
             >
               Sign Out
             </button>
             <button
               onClick={() => { setIsEditing((s) => !s); setValidationErrors({}); }}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
             >
               {isEditing ? "Exit Edit" : "Edit Profile"}
             </button>
@@ -749,13 +749,13 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
               >
                 Cancel
               </button>
               <button
                 onClick={openConfirm}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
               >
                 Save Changes
               </button>
@@ -765,7 +765,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
               >
                 Edit Profile
               </button>
@@ -780,14 +780,14 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={confirmNo}
-                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
                   >
                     No
                   </button>
                   <button
                     type="button"
                     onClick={confirmYes}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
                   >
                     Yes
                   </button>
