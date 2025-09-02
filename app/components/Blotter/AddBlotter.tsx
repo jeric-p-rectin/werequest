@@ -285,7 +285,7 @@ export default function AddBlotter() {
                     <button
                       type="button"
                       onClick={() => removeParty('complainants', idx)}
-                      className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                      className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
                     >
                       Remove
                     </button>
@@ -297,7 +297,7 @@ export default function AddBlotter() {
               <button
                 type="button"
                 onClick={() => addParty('complainants')}
-                className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
               >
                 + Add Complainant
               </button>
@@ -365,7 +365,7 @@ export default function AddBlotter() {
                     <button
                       type="button"
                       onClick={() => removeParty('respondents', idx)}
-                      className="p-2 bg-green-600 text-white hover:bg-green-700 hover:text-white rounded-md"
+                      className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
                     >
                       Remove
                     </button>
@@ -377,7 +377,7 @@ export default function AddBlotter() {
               <button
                 type="button"
                 onClick={() => addParty('respondents')}
-                className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl"
               >
                 + Add Respondent
               </button>
@@ -436,7 +436,7 @@ export default function AddBlotter() {
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+              className="px-4 py-2 bg-[#f5fdf1] text-gray-800 border border-gray-300 hover:bg-[#3c5e1a] hover:text-white duration-300 cursor-pointer rounded-xl disabled:cursor-not-allowed font-medium"
             >
               {isLoading ? 'Submitting...' : 'Submit Report'}
             </button>
