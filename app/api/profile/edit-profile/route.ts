@@ -96,21 +96,21 @@ export async function PUT(request: Request) {
     const client = await clientPromise;
     const db = client.db("WeRequestDB");
     
-    // Only check for duplicate email for all users
-    const existingUser = await db.collection("users").findOne({
-      _id: { $ne: new ObjectId(session.user.id) },
-      email: data.email
-    });
+    // // Only check for duplicate email for all users
+    // const existingUser = await db.collection("users").findOne({
+    //   _id: { $ne: new ObjectId(session.user.id) },
+    //   email: data.email
+    // });
 
-    if (existingUser) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Email is already in use'
-        },
-        { status: 400 }
-      );
-    }
+    // if (existingUser) {
+    //   return NextResponse.json(
+    //     { 
+    //       success: false, 
+    //       error: 'Email is already in use'
+    //     },
+    //     { status: 400 }
+    //   );
+    // }
 
     const result = await db.collection("users").updateOne(
       { _id: new ObjectId(session.user.id) },
